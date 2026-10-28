@@ -1,0 +1,8 @@
+{
+  "name": "ruminate",
+  "description": "Archive each Claude Code session to your private ruminate data repository so you can review it later",
+  "version": "0.1.0",
+  "author": {
+    "name": "futabooo"
+  }
+}

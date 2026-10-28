@@ -1,0 +1,20 @@
+# ~/.config/ruminate/config.toml
+
+# 非公開のデータリポジトリ
+data_repo = "git@github.com:<あなたのアカウント>/ruminate-data.git"
+
+# ruminate が書き込みに使う clone。普段作業する clone とは分けておく
+clone_dir = "~/.local/share/ruminate/data"
+
+# 記録しないプロジェクト（起動したフォルダ名）。* が使える
+exclude_projects = ["work-*", "client-*"]
+
+# これより長いコードブロックは先頭だけ残す
+code_max_lines = 40
+
+# 追加で伏せたい文字列の正規表現
+redact_patterns = ["acme-internal-[0-9]+"]
+
+[claude_code]
+# 省略時は $CLAUDE_CONFIG_DIR/projects か ~/.claude/projects
+# projects_dir = "~/.claude/projects"

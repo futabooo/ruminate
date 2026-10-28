@@ -1,0 +1,14 @@
+{
+  "name": "ruminate",
+  "description": "Keep your conversations with AI agents in a private data repository, and come back to them",
+  "owner": {
+    "name": "futabooo"
+  },
+  "plugins": [
+    {
+      "name": "ruminate",
+      "source": "./plugin",
+      "description": "Archive each Claude Code session to your private ruminate data repository"
+    }
+  ]
+}

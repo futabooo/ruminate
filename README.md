@@ -22,6 +22,37 @@ claude.ai / ChatGPT のエクスポート ────> ruminate import ──�
 - APIキーやトークン、電話番号らしい文字列は `[REDACTED]` に置き換えます。電話番号は半角で、携帯・IP電話・フリーダイヤル・ハイフン区切りの固定電話・`+81` 形式が対象です（全角や `03(1234)5678` は対象外）。完全ではないので、気になるプロジェクトは `exclude_projects` で除外してください
 - 長いコードブロックは先頭 40 行だけ残します
 
+## セットアップの全体像
+
+手でやることが多いので、順番を先に示します。実線は必須、点線は任意です。
+
+```mermaid
+flowchart TD
+    subgraph pc["パソコン"]
+        A["1. cargo install"] --> B["2. ruminate init<br/>データリポジトリと設定ファイル"]
+        B --> C["3. ruminate db で中身を確認<br/>→ ruminate sync で送る"]
+        C -.-> E["5. 公式エクスポートを<br/>ruminate import（任意）"]
+    end
+    subgraph cc["Claude Code"]
+        D["4. /plugin marketplace add<br/>/plugin install"]
+    end
+    subgraph ai["claude.ai"]
+        F["6. GitHub 連携を許可<br/>Search and reference chats をオン"]
+        F --> G["7. 取り込みタスクを作る<br/>prompts/claude-ai-ingest.md"]
+        G --> H["8. 出題タスクを作る（予定）"]
+    end
+    C --> D
+    C --> F
+    G -- "手動実行して確認" --> C
+```
+
+| 番号 | 書いてある場所 |
+|---|---|
+| 1〜3 | この下の「セットアップ」 |
+| 4 | 同じく「セットアップ」の最後 |
+| 5 | 「claude.ai や ChatGPT の会話を取り込む」 |
+| 6〜8 | [prompts/README.md](prompts/README.md) |
+
 ## セットアップ
 
 必要なもの: Rust（`cargo`）、`git`、データリポジトリに push できる GitHub の認証。`gh` があればリポジトリ作成も自動、`duckdb` があれば `ruminate db` が使えます。

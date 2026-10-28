@@ -126,7 +126,7 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 2. Claude Code で `/plugin marketplace add` と `/plugin install`
 3. claude.ai でセットアップ用スキル（`ruminate-setup`・予定）を入れて「ruminateをセットアップして」と頼む。取り込みタスクと出題タスクを、内容を見せて承認をもらってから作る
 
-手でやるしかないこと: プラグインのインストール、claude.ai から GitHub に入る許可、タスク作成の承認、「Search and reference chats」の設定。
+手でやるしかないこと: プラグインのインストール、claude.ai から GitHub に入る許可、タスク作成の承認、「Search and reference chats」の設定。手順は `prompts/README.md`。
 
 ## まだやっていないこと
 

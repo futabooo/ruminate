@@ -71,6 +71,10 @@ ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変
 - 会話の開始時刻と ID からファイル名が決まるので、あとで新しいエクスポートを取り込み直すと同じファイルが上書きされます
 - 伏せ字と長いコードの切り詰めは `sync` と同じです
 
+## claude.ai のタスクを作る
+
+claude.ai の新しい会話を毎日拾う取り込みタスクと、復習問題を出す出題タスク（予定）は、claude.ai のスケジュールタスクとして動きます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
+
 ## 設定
 
 `~/.config/ruminate/config.toml`（例: [docs/config.example.toml](docs/config.example.toml)）

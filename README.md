@@ -51,7 +51,7 @@ Claude Code にプラグインを入れます。会話の終わり（SessionEnd�
 | コマンド | すること |
 |---|---|
 | `ruminate init` | データリポジトリの用意、設定ファイルの作成、これまでの会話の変換 |
-| `ruminate sync` | 新しい・更新された会話を変換して push。`--dry-run` で確認だけ、`--no-push` で送らない |
+| `ruminate sync` | 新しい・更新された会話を変換して push。`--dry-run` で確認だけ、`--no-push` で送らない、`--all` で全件を作り直す（伏せ字ルールを変えたあとなど） |
 | `ruminate hook` | プラグインのフックから呼ばれる。すぐ戻り、裏で `sync` を動かす |
 | `ruminate db` | ビューを用意した状態で DuckDB を開く。`ruminate db -ui` でブラウザのUI |
 

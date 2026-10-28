@@ -40,8 +40,11 @@ enum Cmd {
         #[arg(long, default_value_t = 0)]
         delay: u64,
         /// Return at once and sync in a detached process.
-        #[arg(long)]
+        #[arg(long, conflicts_with_all = ["no_push", "dry_run", "all"])]
         background: bool,
+        /// Convert every conversation again (e.g. after changing redaction rules).
+        #[arg(long)]
+        all: bool,
     },
     /// Entry point for Claude Code hooks (SessionEnd / SessionStart).
     Hook {
@@ -76,6 +79,7 @@ fn main() -> Result<()> {
             dry_run,
             delay,
             background,
+            all,
         } => {
             if background {
                 return sync::spawn_background(delay);
@@ -85,6 +89,7 @@ fn main() -> Result<()> {
                 no_push,
                 dry_run,
                 delay: Duration::from_secs(delay),
+                all,
             };
             let r = sync::run(&cfg, &opts)?;
             println!(

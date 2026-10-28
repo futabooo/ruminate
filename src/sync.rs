@@ -21,6 +21,9 @@ pub struct SyncOptions {
     pub dry_run: bool,
     /// Wait this long first (Claude Code writes the transcript lazily).
     pub delay: Duration,
+    /// Convert every conversation again, even ones that have not changed
+    /// (after changing redaction rules or `code_max_lines`).
+    pub all: bool,
 }
 
 #[derive(Debug, Default)]
@@ -68,7 +71,7 @@ pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
             let Some(stamp) = FileStamp::of(&path) else {
                 continue;
             };
-            if state.is_unchanged(&path, &stamp) {
+            if !opts.all && state.is_unchanged(&path, &stamp) {
                 report.unchanged += 1;
                 continue;
             }
@@ -77,6 +80,22 @@ pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
                 Err(e) => {
                     eprintln!("ruminate: {}: {e:#}", path.display());
                     continue;
+                }
+            };
+            // The output path carries the project name and start time, so
+            // it can change (fixed project detection, excluded project).
+            // Drop the file written last time *before* writing the new one:
+            // on a case-insensitive filesystem the two names may be the same
+            // file, and removing afterwards would delete the fresh copy.
+            let previous = state.files.get(&path).and_then(|e| e.output.clone());
+            let drop_previous = |keep: Option<&PathBuf>| {
+                if let Some(old) = &previous
+                    && keep != Some(old)
+                    && !opts.dry_run
+                    && let Err(e) = std::fs::remove_file(cfg.clone_dir.join(old))
+                    && e.kind() != std::io::ErrorKind::NotFound
+                {
+                    eprintln!("ruminate: 古い出力を消せません: {}: {e}", old.display());
                 }
             };
             let output = match session {
@@ -91,6 +110,7 @@ pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
                             s.title.as_deref().unwrap_or("-")
                         );
                     } else {
+                        drop_previous(Some(&rel));
                         let full = cfg.clone_dir.join(&rel);
                         std::fs::create_dir_all(full.parent().expect("has parent"))?;
                         std::fs::write(&full, renderer.to_jsonl(&s)?)?;
@@ -99,6 +119,7 @@ pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
                     Some(rel)
                 }
                 _ => {
+                    drop_previous(None);
                     report.skipped += 1;
                     None
                 }

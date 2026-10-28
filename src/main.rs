@@ -1,7 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use ruminate::config::Config;
-use ruminate::{db, init, sync};
+use ruminate::{db, import, init, sync};
+use std::path::PathBuf;
 use std::time::Duration;
 
 #[derive(Parser)]
@@ -45,6 +46,18 @@ enum Cmd {
         /// Convert every conversation again (e.g. after changing redaction rules).
         #[arg(long)]
         all: bool,
+    },
+    /// Import official export files (claude.ai, ChatGPT: `conversations.json`).
+    Import {
+        /// Export files to read. The format is told from the contents.
+        #[arg(required = true, value_name = "FILE")]
+        files: Vec<PathBuf>,
+        /// Write files but do not commit or push.
+        #[arg(long)]
+        no_push: bool,
+        /// Only print what would be written.
+        #[arg(long)]
+        dry_run: bool,
     },
     /// Entry point for Claude Code hooks (SessionEnd / SessionStart).
     Hook {
@@ -97,6 +110,24 @@ fn main() -> Result<()> {
                 chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
                 r.written,
                 r.unchanged,
+                r.skipped,
+                if r.pushed { ", pushed" } else { "" }
+            );
+            Ok(())
+        }
+        Cmd::Import {
+            files,
+            no_push,
+            dry_run,
+        } => {
+            let cfg = Config::load()?;
+            let opts = import::ImportOptions { no_push, dry_run };
+            let r = import::run(&cfg, &opts, &files)?;
+            println!(
+                "{} ruminate: imported {} conversation(s) from {}, skipped {}{}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                r.written,
+                r.agents.join(", "),
                 r.skipped,
                 if r.pushed { ", pushed" } else { "" }
             );

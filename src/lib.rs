@@ -3,6 +3,7 @@
 pub mod config;
 pub mod db;
 pub mod git;
+pub mod import;
 pub mod init;
 pub mod model;
 pub mod output;

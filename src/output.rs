@@ -52,8 +52,9 @@ impl Renderer<'_> {
 }
 
 /// `logs/<agent>/<YYYY>/<MM>/<YYYY-MM-DD_HHMM>_<project>_<id8>.jsonl`, in
-/// local time. Depends only on fields that never change for a session, so a
-/// rewrite always lands on the same file.
+/// local time. Web conversations have no project and leave that part out.
+/// Depends only on fields that never change for a session, so a rewrite
+/// always lands on the same file.
 pub fn relative_path(s: &Session) -> PathBuf {
     let start = s.started_at.with_timezone(&Local);
     let short: String =
@@ -61,12 +62,16 @@ pub fn relative_path(s: &Session) -> PathBuf {
             .filter(|c| c.is_ascii_alphanumeric())
             .take(8)
             .collect();
-    let name = format!(
-        "{}_{}_{}.jsonl",
-        start.format("%Y-%m-%d_%H%M"),
-        slug(&s.project),
-        short
-    );
+    let name = if s.project.is_empty() {
+        format!("{}_{}.jsonl", start.format("%Y-%m-%d_%H%M"), short)
+    } else {
+        format!(
+            "{}_{}_{}.jsonl",
+            start.format("%Y-%m-%d_%H%M"),
+            slug(&s.project),
+            short
+        )
+    };
     Path::new("logs")
         .join(s.agent)
         .join(start.format("%Y").to_string())

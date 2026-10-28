@@ -1,0 +1,172 @@
+[
+  {
+    "title": "Rust のライフタイム",
+    "create_time": 1792460000.5,
+    "update_time": 1792461000.0,
+    "mapping": {
+      "root": {"id": "root", "message": null, "parent": null, "children": ["sys"]},
+      "sys": {
+        "id": "sys",
+        "message": {
+          "id": "sys",
+          "author": {"role": "system", "name": null, "metadata": {}},
+          "create_time": null,
+          "content": {"content_type": "text", "parts": [""]},
+          "metadata": {"is_visually_hidden_from_conversation": true}
+        },
+        "parent": "root",
+        "children": ["ctx"]
+      },
+      "ctx": {
+        "id": "ctx",
+        "message": {
+          "id": "ctx",
+          "author": {"role": "user", "name": null, "metadata": {}},
+          "create_time": null,
+          "content": {"content_type": "user_editable_context", "user_profile": "I am a developer", "user_instructions": "Be brief"},
+          "metadata": {"is_visually_hidden_from_conversation": true, "is_user_system_message": true}
+        },
+        "parent": "sys",
+        "children": ["u1"]
+      },
+      "u1": {
+        "id": "u1",
+        "message": {
+          "id": "u1",
+          "author": {"role": "user", "name": null, "metadata": {}},
+          "create_time": 1792460001.0,
+          "content": {"content_type": "text", "parts": ["ライフタイムの 'a ってなに？"]},
+          "metadata": {}
+        },
+        "parent": "ctx",
+        "children": ["a1-old", "a1"]
+      },
+      "a1-old": {
+        "id": "a1-old",
+        "message": {
+          "id": "a1-old",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460002.0,
+          "content": {"content_type": "text", "parts": ["abandoned branch"]},
+          "metadata": {}
+        },
+        "parent": "u1",
+        "children": []
+      },
+      "a1": {
+        "id": "a1",
+        "message": {
+          "id": "a1",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460010.0,
+          "content": {"content_type": "thoughts", "thoughts": [{"summary": "x", "content": "secret reasoning"}]},
+          "metadata": {},
+          "recipient": "all"
+        },
+        "parent": "u1",
+        "children": ["a2"]
+      },
+      "a2": {
+        "id": "a2",
+        "message": {
+          "id": "a2",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460011.0,
+          "content": {"content_type": "code", "language": "unknown", "text": "search(\"rust lifetime 'a\")\nmore"},
+          "metadata": {},
+          "recipient": "browser"
+        },
+        "parent": "a1",
+        "children": ["t1"]
+      },
+      "t1": {
+        "id": "t1",
+        "message": {
+          "id": "t1",
+          "author": {"role": "tool", "name": "browser", "metadata": {}},
+          "create_time": 1792460012.0,
+          "content": {"content_type": "tether_browsing_display", "result": "should-not-appear"},
+          "metadata": {}
+        },
+        "parent": "a2",
+        "children": ["a3"]
+      },
+      "a3": {
+        "id": "a3",
+        "message": {
+          "id": "a3",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460013.0,
+          "content": {"content_type": "text", "parts": ["参照が有効な期間に付ける名前です。citeturn0search1"]},
+          "metadata": {},
+          "recipient": "all"
+        },
+        "parent": "t1",
+        "children": ["a4"]
+      },
+      "a4": {
+        "id": "a4",
+        "message": {
+          "id": "a4",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": null,
+          "content": {"content_type": "multimodal_text", "parts": [{"content_type": "image_asset_pointer", "asset_pointer": "file-service://x"}, "図も付けました。"]},
+          "metadata": {},
+          "recipient": "all"
+        },
+        "parent": "a3",
+        "children": ["u2"]
+      },
+      "u2": {
+        "id": "u2",
+        "message": {
+          "id": "u2",
+          "author": {"role": "user", "name": null, "metadata": {}},
+          "create_time": 1792460100.0,
+          "content": {"content_type": "text", "parts": ["token は ghp_abcdefghijklmnopqrstuvwxyz1234 です"]},
+          "metadata": {}
+        },
+        "parent": "a4",
+        "children": ["a5"]
+      },
+      "a5": {
+        "id": "a5",
+        "message": {
+          "id": "a5",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460101.0,
+          "content": {"content_type": "code", "language": "python", "text": "print(1)\nprint(2)"},
+          "metadata": {},
+          "recipient": "python"
+        },
+        "parent": "u2",
+        "children": ["a6"]
+      },
+      "a6": {
+        "id": "a6",
+        "message": {
+          "id": "a6",
+          "author": {"role": "assistant", "name": null, "metadata": {}},
+          "create_time": 1792460102.0,
+          "content": {"content_type": "text", "parts": ["それは貼らないでください。"]},
+          "metadata": {},
+          "recipient": "all"
+        },
+        "parent": "a5",
+        "children": []
+      }
+    },
+    "current_node": "a6",
+    "conversation_id": "7a7a7a7a-0000-0000-0000-000000000000",
+    "id": "7a7a7a7a-0000-0000-0000-000000000000"
+  },
+  {
+    "title": "Empty",
+    "create_time": 1792470000.0,
+    "mapping": {
+      "root": {"id": "root", "message": null, "parent": null, "children": []}
+    },
+    "current_node": "root",
+    "conversation_id": "9b9b9b9b-0000-0000-0000-000000000000"
+  }
+]

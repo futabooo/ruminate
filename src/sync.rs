@@ -9,7 +9,7 @@ use crate::source::{Source, claude_code::ClaudeCode};
 use crate::state::{Entry, FileStamp, State};
 use anyhow::{Context, Result};
 use fs2::FileExt;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -44,17 +44,25 @@ pub fn sources(cfg: &Config) -> Result<Vec<Box<dyn Source>>> {
     })])
 }
 
-pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
-    std::thread::sleep(opts.delay);
+/// The machine-wide lock around writes to the clone. Hooks from several
+/// sessions (and an `import` run by hand) can fire at once; they take turns.
+/// Released when the returned file is dropped.
+pub fn lock() -> Result<File> {
     let state_dir = state_dir();
     std::fs::create_dir_all(&state_dir)?;
-    // Hooks from several sessions can fire at once; take turns.
     let lock = OpenOptions::new()
         .create(true)
         .truncate(false)
         .write(true)
         .open(state_dir.join("lock"))?;
     lock.lock_exclusive().context("ロックを取れません")?;
+    Ok(lock)
+}
+
+pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
+    std::thread::sleep(opts.delay);
+    let _lock = lock()?;
+    let state_dir = state_dir();
 
     if !opts.dry_run && !git::is_repo(&cfg.clone_dir) {
         git::clone(&cfg.data_repo, &cfg.clone_dir)?;

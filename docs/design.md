@@ -19,8 +19,8 @@ Claude などのAIエージェントと一緒にやったことを、安川康�
 ```
 パソコン: ruminate（Rust）
   Claude Code の会話 ─────hook / sync──┐
-  ChatGPT・DeepSeek・claude.ai の        │
-  エクスポート ─────────import（予定）──┤
+  claude.ai・ChatGPT の                  │
+  エクスポート ─────────import──────────┤
                                         ▼
 claude.ai: 取り込みタスク（毎日・予定）──> ruminate-data（Private）
   claude.ai の新しい会話                     ├─ logs/<agent>/…jsonl
@@ -31,7 +31,7 @@ claude.ai: 出題タスク（毎晩・予定）<──DuckDBで読む──┘
 
 | 役割 | どこで動く | 何をする |
 |---|---|---|
-| `ruminate`（このリポジトリ） | パソコン | ターミナルの会話を `ruminate-data` に送る。エクスポートの取り込み（予定） |
+| `ruminate`（このリポジトリ） | パソコン | ターミナルの会話を `ruminate-data` に送る（`sync`）。公式エクスポートの取り込み（`import`） |
 | 取り込みタスク | claude.ai のスケジュール | claude.ai の新しい会話を `logs/claude-ai/` に書く。通知しない |
 | 出題タスク | claude.ai のスケジュール | `ruminate-data` だけを読んで出題し、結果を `review/` に書く。出題があるときだけ通知 |
 
@@ -100,6 +100,16 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 - 元ファイルは追記されるだけ（`/compact` も要約を追記する。claude-recall ADR-003）なので、変わったら丸ごと作り直せばよい
 - 読めない行や、`user` / `assistant` なのに形が崩れている行は数えて、多ければ警告する
 
+## エクスポートの読み方
+
+`ruminate import` は claude.ai と ChatGPT の `conversations.json` を読む（`src/source/claude_ai.rs`、`src/source/chatgpt.rs`）。どちらも同じファイル名なので、形式は最初の会話の形（`chat_messages` か `mapping` か）で判別する。
+
+- claude.ai: 会話ごとに `chat_messages` が並ぶ。`sender` が `human` / `assistant`。`content` のブロックのうち `text` と `tool_use` だけ使い、`thinking` と `tool_result` は捨てる。古いエクスポートは `content` がなく `text` だけ。添付（`attachments` / `files`）は名前だけ残し、`extracted_content` は読まない
+- ChatGPT: 会話は `mapping` の木。`current_node` から `parent` をたどって、最後に表示していた枝だけを読む。`system` と `tool` の発言、`is_visually_hidden_from_conversation`、`thoughts`（推論）は捨てる。`recipient` が `all` でない assistant の発言はツール呼び出しなので `browser: …` のような1行にする。引用マーカー（私用領域の文字で囲まれた `cite…`）は取り除く。`create_time` が `null` のメッセージは直前の時刻を使う
+- どちらも、連続する assistant の発言は1ターンにまとめる（Claude Code と同じ）。本人の発言が1つもない会話は書かない
+- Web の会話に project はない。ファイル名は `YYYY-MM-DD_HHMM_<id8>.jsonl`（project の部分を省く）。`url` に会話のリンクを入れる
+- `sync` と違って状態は持たない。エクスポートは一度きりのダウンロードなので、渡されたファイルの会話を全部書き、同じ名前のファイルは上書きする
+
 ## 送るタイミング
 
 - **SessionEnd フック**: `ruminate hook` がすぐ戻り、切り離したプロセスで数秒待ってから `sync` する。SessionEnd は標準 1.5 秒（最大 60 秒）しか待ってもらえず、会話ファイルの書き込みも少し遅れるため
@@ -120,7 +130,8 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 
 ## まだやっていないこと
 
-- `ruminate import`（claude.ai → ChatGPT → DeepSeek のエクスポート）。`Source` トレイトに足す
+- `ruminate import` の DeepSeek 対応（`Export` トレイトの実装を1つ足す）
+- `logs/claude-ai/` を取り込みタスクと `import` の両方が書くので、同じ会話を同じファイル名（開始時刻 + ID の先頭8文字）に書くよう取り込みタスクの手順書で決める
 - 取り込みタスクと出題タスクの手順書（`prompts/`）と、セットアップ用スキル
 - スケジュールで動くセッションから、非公開リポジトリと過去チャット検索が使えるかの確認
 - Codex CLI など、ほかのターミナルエージェントの読み込み

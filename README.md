@@ -11,7 +11,8 @@ AIエージェントとの会話を自分の非公開リポジトリにためて
 ## 仕組み
 
 ```
-Claude Code の会話 ──(プラグインのフック)──> ruminate sync ──> ruminate-data（Private）
+Claude Code の会話 ──(プラグインのフック)──> ruminate sync ──┐
+claude.ai / ChatGPT のエクスポート ────> ruminate import ──┴─> ruminate-data（Private）
                                                               ├─ logs/<agent>/YYYY/MM/*.jsonl
                                                               └─ review/*.jsonl（振り返りタスクが書く）
 ```
@@ -52,8 +53,23 @@ Claude Code にプラグインを入れます。会話の終わり（SessionEnd�
 |---|---|
 | `ruminate init` | データリポジトリの用意、設定ファイルの作成、これまでの会話の変換 |
 | `ruminate sync` | 新しい・更新された会話を変換して push。`--dry-run` で確認だけ、`--no-push` で送らない、`--all` で全件を作り直す（伏せ字ルールを変えたあとなど） |
+| `ruminate import <FILE>...` | claude.ai・ChatGPT の公式エクスポート（`conversations.json`）を変換して push。形式は中身から判別。`--dry-run` / `--no-push` は `sync` と同じ |
 | `ruminate hook` | プラグインのフックから呼ばれる。すぐ戻り、裏で `sync` を動かす |
 | `ruminate db` | ビューを用意した状態で DuckDB を開く。`ruminate db -ui` でブラウザのUI |
+
+## claude.ai や ChatGPT の会話を取り込む
+
+公式のエクスポート（claude.ai: 設定 → プライバシー → データをエクスポート、ChatGPT: 設定 → データコントロール → データをエクスポート）の ZIP を展開し、中の `conversations.json` を渡します。
+
+```sh
+ruminate import --dry-run ~/Downloads/data-2026-10-28/conversations.json   # 何が書かれるか見る
+ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変換して送る
+```
+
+- 残すのは本人の発言と返答の文章、ツール操作の1行要約（`web_search: …`、`python: …`）、添付ファイルの名前だけです。添付の中身・思考・ツールの結果・画像は送りません
+- ChatGPT は、編集や再生成で枝分かれした会話のうち、最後に表示していた枝だけを読みます
+- 会話の開始時刻と ID からファイル名が決まるので、あとで新しいエクスポートを取り込み直すと同じファイルが上書きされます
+- 伏せ字と長いコードの切り詰めは `sync` と同じです
 
 ## 設定
 

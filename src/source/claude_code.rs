@@ -15,7 +15,7 @@
 //! - `textNotTyped` marks text the harness wrote on the person's behalf;
 //! - `custom-title` / `ai-title` lines carry the session title, last one wins.
 
-use super::Source;
+use super::{Source, shorten};
 use crate::model::{Channel, Role, Session, Turn};
 use crate::project::ProjectResolver;
 use anyhow::{Context, Result};
@@ -302,14 +302,6 @@ fn relative_to(path: &str, cwd: &str) -> String {
     match Path::new(path).strip_prefix(cwd) {
         Ok(rel) => rel.to_string_lossy().into_owned(),
         Err(_) => path.to_string(),
-    }
-}
-
-fn shorten(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        s.to_string()
-    } else {
-        format!("{}…", s.chars().take(max).collect::<String>())
     }
 }
 

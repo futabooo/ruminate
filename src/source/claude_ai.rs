@@ -164,14 +164,26 @@ fn content(m: &Value) -> (String, Vec<String>) {
     (text.join("\n\n"), actions)
 }
 
-/// `web_search: duckdb read_json`, `artifacts: Budget sheet`. Inputs can
+/// `web_search: duckdb read_json`, `Artifact: Budget sheet`, `Edit: src/main.rs`
+/// (Claude Code on the web uses the same tools as the terminal). Inputs can
 /// hold whole documents, so only a short hint is kept.
 pub fn describe_tool(name: &str, input: &Value) -> String {
-    let hint = ["query", "title", "command", "url", "id"]
-        .iter()
-        .find_map(|k| input.get(k).and_then(Value::as_str))
-        .map(|s| shorten(s.lines().next().unwrap_or("").trim(), 80))
-        .filter(|s| !s.is_empty());
+    let hint = [
+        "query",
+        "title",
+        "command",
+        "file_path",
+        "notebook_path",
+        "pattern",
+        "url",
+        "skill",
+        "description",
+        "id",
+    ]
+    .iter()
+    .find_map(|k| input.get(k).and_then(Value::as_str))
+    .map(|s| shorten(s.lines().next().unwrap_or("").trim(), 80))
+    .filter(|s| !s.is_empty());
     match hint {
         Some(h) => format!("{name}: {h}"),
         None => name.to_string(),

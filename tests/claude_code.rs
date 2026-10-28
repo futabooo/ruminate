@@ -4,6 +4,7 @@
 
 use ruminate::model::{Channel, Role};
 use ruminate::output::{Renderer, relative_path};
+use ruminate::project::ProjectResolver;
 use ruminate::redact::Redactor;
 use ruminate::source::Source;
 use ruminate::source::claude_code::{ClaudeCode, describe_tool, parse_transcript};
@@ -21,6 +22,7 @@ fn file_name_is_the_session_id() {
     std::fs::write(proj.join("new-session-id.jsonl"), older).unwrap();
     let src = ClaudeCode {
         projects_dir: dir.path().to_path_buf(),
+        projects: ProjectResolver::default(),
     };
     let files = src.discover().unwrap();
     assert_eq!(files.len(), 1);
@@ -30,7 +32,7 @@ fn file_name_is_the_session_id() {
 
 #[test]
 fn keeps_only_the_conversation() {
-    let s = parse_transcript(FIXTURE).expect("session");
+    let s = parse_transcript(FIXTURE, &ProjectResolver::default()).expect("session");
     assert_eq!(s.agent, "claude-code");
     assert_eq!(s.channel, Channel::Cli);
     assert_eq!(s.id, "sess-1234abcd-0000-0000-0000-000000000000");
@@ -54,7 +56,7 @@ fn keeps_only_the_conversation() {
 
 #[test]
 fn assistant_steps_merge_into_one_turn() {
-    let s = parse_transcript(FIXTURE).unwrap();
+    let s = parse_transcript(FIXTURE, &ProjectResolver::default()).unwrap();
     let reply = &s.turns[1];
     assert!(
         reply
@@ -73,7 +75,7 @@ fn assistant_steps_merge_into_one_turn() {
 
 #[test]
 fn skipped_lines_do_not_leak() {
-    let s = parse_transcript(FIXTURE).unwrap();
+    let s = parse_transcript(FIXTURE, &ProjectResolver::default()).unwrap();
     let all: String = s
         .turns
         .iter()
@@ -95,7 +97,7 @@ fn skipped_lines_do_not_leak() {
 
 #[test]
 fn rendering_redacts_and_truncates() {
-    let s = parse_transcript(FIXTURE).unwrap();
+    let s = parse_transcript(FIXTURE, &ProjectResolver::default()).unwrap();
     let redactor = Redactor::new(&[]).unwrap();
     let r = Renderer {
         redactor: &redactor,
@@ -125,20 +127,21 @@ fn rendering_redacts_and_truncates() {
 
 #[test]
 fn output_path_is_stable() {
-    let s = parse_transcript(FIXTURE).unwrap();
+    let s = parse_transcript(FIXTURE, &ProjectResolver::default()).unwrap();
     let p = relative_path(&s).to_string_lossy().into_owned();
     assert!(p.starts_with("logs/claude-code/2026/10/2026-10-2"), "{p}");
     assert!(p.ends_with("_rss-reader_sess1234.jsonl"), "{p}");
     assert_eq!(
         p,
-        relative_path(&parse_transcript(FIXTURE).unwrap()).to_string_lossy()
+        relative_path(&parse_transcript(FIXTURE, &ProjectResolver::default()).unwrap())
+            .to_string_lossy()
     );
 }
 
 #[test]
 fn empty_or_anonymous_transcripts_yield_nothing() {
-    assert!(parse_transcript("").is_none());
-    assert!(parse_transcript("{\"type\":\"cost-state\"}\n").is_none());
+    assert!(parse_transcript("", &ProjectResolver::default()).is_none());
+    assert!(parse_transcript("{\"type\":\"cost-state\"}\n", &ProjectResolver::default()).is_none());
 }
 
 #[test]

@@ -64,7 +64,7 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 | channel | VARCHAR | `cli` / `web` |
 | session | VARCHAR | 会話ID |
 | title | VARCHAR | 会話のタイトル |
-| project | VARCHAR | 起動したフォルダ名（Web は空でもよい） |
+| project | VARCHAR | リポジトリ名。起動したフォルダから決める（worktree やサブフォルダはもとのリポジトリに寄せる。`src/project.rs`）。Web は空でもよい |
 | git_branch | VARCHAR | |
 | url | VARCHAR | Web の会話のURL |
 | date | TIMESTAMPTZ | ターンの時刻（UTC） |

@@ -3,6 +3,7 @@
 use crate::config::{Config, state_dir};
 use crate::git;
 use crate::output::{Renderer, relative_path};
+use crate::project::ProjectResolver;
 use crate::redact::Redactor;
 use crate::source::{Source, claude_code::ClaudeCode};
 use crate::state::{Entry, FileStamp, State};
@@ -35,10 +36,12 @@ pub struct Report {
     pub pushed: bool,
 }
 
-pub fn sources(cfg: &Config) -> Vec<Box<dyn Source>> {
-    vec![Box::new(ClaudeCode {
+pub fn sources(cfg: &Config) -> Result<Vec<Box<dyn Source>>> {
+    let projects = ProjectResolver::new(&cfg.project_patterns)?;
+    Ok(vec![Box::new(ClaudeCode {
         projects_dir: cfg.claude_projects_dir(),
-    })]
+        projects,
+    })])
 }
 
 pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
@@ -66,7 +69,7 @@ pub fn run(cfg: &Config, opts: &SyncOptions) -> Result<Report> {
     };
     let mut report = Report::default();
 
-    for source in sources(cfg) {
+    for source in sources(cfg)? {
         for path in source.discover()? {
             let Some(stamp) = FileStamp::of(&path) else {
                 continue;

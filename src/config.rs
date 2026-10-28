@@ -22,6 +22,11 @@ pub struct Config {
     /// Extra regular expressions to replace with `[REDACTED]`.
     #[serde(default)]
     pub redact_patterns: Vec<String>,
+    /// Extra rules for naming the project from the directory a session
+    /// started in: regular expressions with a `(?P<repo>...)` group, tried
+    /// after the built-in worktree rules. See `project.rs`.
+    #[serde(default)]
+    pub project_patterns: Vec<String>,
     #[serde(default)]
     pub claude_code: ClaudeCodeConfig,
 }
@@ -48,6 +53,7 @@ impl Config {
             exclude_projects: Vec::new(),
             code_max_lines: default_code_max_lines(),
             redact_patterns: Vec::new(),
+            project_patterns: Vec::new(),
             claude_code: ClaudeCodeConfig::default(),
         }
     }
@@ -96,9 +102,11 @@ impl Config {
 }
 
 pub fn home() -> PathBuf {
-    std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."))
+    home_dir().unwrap_or_else(|| PathBuf::from("."))
+}
+
+pub fn home_dir() -> Option<PathBuf> {
+    std::env::var_os("HOME").map(PathBuf::from)
 }
 
 pub fn config_path() -> PathBuf {

@@ -65,7 +65,10 @@ clone_dir = "~/.local/share/ruminate/data"
 exclude_projects = ["work-*"]
 code_max_lines = 40
 redact_patterns = []
+project_patterns = []
 ```
+
+プロジェクト名は起動したフォルダから決めます。git の worktree（`<repo>/.claude/worktrees/<名前>` や `~/.herdr/worktrees/<repo>/<名前>`）はもとのリポジトリ名に、サブフォルダはそのリポジトリ名になります。ほかの置き方をしているなら `project_patterns` に `(?P<repo>...)` を含む正規表現を足してください。
 
 パソコンの中だけの状態（送信済みの記録・ロック・ログ）は `~/.local/state/ruminate/` にあります。バックグラウンドの同期の結果は `sync.log` に出ます。
 

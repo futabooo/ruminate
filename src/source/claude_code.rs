@@ -17,6 +17,7 @@
 
 use super::Source;
 use crate::model::{Channel, Role, Session, Turn};
+use crate::project::ProjectResolver;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use serde_json::Value;
@@ -24,6 +25,7 @@ use std::path::{Path, PathBuf};
 
 pub struct ClaudeCode {
     pub projects_dir: PathBuf,
+    pub projects: ProjectResolver,
 }
 
 impl Source for ClaudeCode {
@@ -56,7 +58,7 @@ impl Source for ClaudeCode {
     fn parse(&self, path: &Path) -> Result<Option<Session>> {
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("読めません: {}", path.display()))?;
-        let mut session = parse_transcript(&text);
+        let mut session = parse_transcript(&text, &self.projects);
         // The file name is the session ID. Lines inside may carry an older
         // ID: resuming a session copies earlier lines into the new file.
         if let (Some(s), Some(stem)) = (session.as_mut(), path.file_stem()) {
@@ -80,7 +82,7 @@ const NOISE_PREFIXES: &[&str] = &[
     "[Request interrupted",
 ];
 
-pub fn parse_transcript(text: &str) -> Option<Session> {
+pub fn parse_transcript(text: &str, projects: &ProjectResolver) -> Option<Session> {
     let mut session_id = None;
     let mut cwd = String::new();
     let mut git_branch = None;
@@ -191,10 +193,7 @@ pub fn parse_transcript(text: &str) -> Option<Session> {
 
     let id = session_id?;
     let started_at = started_at?;
-    let project = Path::new(&cwd)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| "unknown".to_string());
+    let project = projects.resolve(&cwd);
     Some(Session {
         agent: "claude-code",
         channel: Channel::Cli,

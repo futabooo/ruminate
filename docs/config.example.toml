@@ -15,6 +15,10 @@ code_max_lines = 40
 # 追加で伏せたい文字列の正規表現
 redact_patterns = ["acme-internal-[0-9]+"]
 
+# プロジェクト名を起動フォルダのパスから決める追加ルール。(?P<repo>...) がリポジトリ名
+# 組み込み: <repo>/.claude/worktrees/<名前>、<どこか>/worktrees/<repo>/<名前>
+project_patterns = ["/wt/(?P<repo>[^/]+)-[0-9]+$"]
+
 [claude_code]
 # 省略時は $CLAUDE_CONFIG_DIR/projects か ~/.claude/projects
 # projects_dir = "~/.claude/projects"

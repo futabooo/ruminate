@@ -25,6 +25,18 @@ const BUILTIN: &[&str] = &[
     r"\beyJ[A-Za-z0-9_\-]{8,}\.eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}",
     // Bearer tokens in headers.
     r"(?i)\bbearer\s+[A-Za-z0-9._\-]{16,}",
+    // Japanese phone numbers. ASCII word boundaries so that a number right
+    // after kana/kanji still matches, but a longer run of digits (an
+    // account ID) does not.
+    //   +81 90-1234-5678 / +81-3-1234-5678. Must not follow a letter, digit
+    //   or sign (`x+81`, `+81` inside a diff hunk); the `pre` group is kept.
+    r"(?m)(?P<pre>^|[^A-Za-z0-9_+\-.])\+81[\- ]?\d{1,4}[\- ]?\d{1,4}[\- ]?\d{3,4}(?-u:\b)",
+    //   mobile / IP phone: 070, 080, 090, 050
+    r"(?-u:\b)0[5789]0[\-\s]?\d{4}[\-\s]?\d{4}(?-u:\b)",
+    //   toll-free: 0120-xxx-xxx, 0800-xxx-xxxx
+    r"(?-u:\b)(?:0120[\-\s]?\d{3}[\-\s]?\d{3}|0800[\-\s]?\d{3}[\-\s]?\d{4})(?-u:\b)",
+    //   landline, hyphenated only (10 digits): 03-1234-5678, 045-123-4567, ...
+    r"(?-u:\b)(?:0\d-\d{4}-\d{4}|0\d{2}-\d{3}-\d{4}|0\d{3}-\d{2}-\d{4}|0\d{4}-\d-\d{4})(?-u:\b)",
 ];
 
 /// `password = "..."`, `API_KEY: ...`, `client_secret=...`: keep the name,
@@ -57,9 +69,19 @@ impl Redactor {
     pub fn redact(&self, text: &str) -> String {
         let mut out = text.to_string();
         for re in &self.patterns {
-            if re.is_match(&out) {
-                out = re.replace_all(&out, MARK).into_owned();
+            if !re.is_match(&out) {
+                continue;
             }
+            // A pattern may name the text before the secret `pre` to keep it
+            // (there is no look-behind).
+            out = if re.capture_names().any(|n| n == Some("pre")) {
+                re.replace_all(&out, |c: &regex::Captures| {
+                    format!("{}{MARK}", c.name("pre").map_or("", |m| m.as_str()))
+                })
+                .into_owned()
+            } else {
+                re.replace_all(&out, MARK).into_owned()
+            };
         }
         self.assignment
             .replace_all(&out, |c: &regex::Captures| {
@@ -112,6 +134,35 @@ mod tests {
     fn private_key_block() {
         let s = "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\ndef\n-----END OPENSSH PRIVATE KEY-----";
         assert_eq!(r(s), "[REDACTED]");
+    }
+
+    #[test]
+    fn phone_numbers() {
+        assert_eq!(r("携帯は07020065972です"), "携帯は[REDACTED]です");
+        assert_eq!(r("tel: 090-1234-5678"), "tel: [REDACTED]");
+        assert_eq!(r("050 1234 5678"), "[REDACTED]");
+        assert_eq!(r("+81 70-2006-5972"), "[REDACTED]");
+        assert_eq!(r("電話は+817020065972です"), "電話は[REDACTED]です");
+        assert_eq!(r("(+81-3-1234-5678)"), "([REDACTED])");
+        assert_eq!(r("03-1234-5678 / 045-123-4567"), "[REDACTED] / [REDACTED]");
+        assert_eq!(r("0120-123-456"), "[REDACTED]");
+    }
+
+    #[test]
+    fn digits_that_are_not_phone_numbers() {
+        // An account ID that happens to contain a mobile-looking run.
+        let s = "ID 6848080702014370253";
+        assert_eq!(r(s), s);
+        // Dates, versions, ordinary numbers.
+        let s = "2026-10-28 v0.4.45 port 8080 0x1234";
+        assert_eq!(r(s), s);
+        // Unhyphenated landline numbers are too ambiguous to touch.
+        let s = "0312345678";
+        assert_eq!(r(s), s);
+        // `+81` glued to an identifier or sign, or spread over lines (a diff
+        // hunk) is not a phone number.
+        let s = "x+81 1234 5678 / 1e+81-1234-5678 / 0.5+81 12 3456\n+81\n1\n2345";
+        assert_eq!(r(s), s);
     }
 
     #[test]

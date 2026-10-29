@@ -33,9 +33,8 @@ claude plugin validate plugin
 ## まだ作っていないもの
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
-- 出題タスクの手順書（`prompts/`）。取り込みタスクの手順書は `prompts/claude-ai-ingest.md` に書いた（2026-10-28、claude.ai 側で未検証）
+- 手順書は `prompts/` に 2 つ（取り込み・出題）、作り方は `prompts/README.md`（2026-10-29、claude.ai 側で未検証）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
-- `review/items.jsonl` / `history.jsonl` を使う出題の仕組み
 - スケジュールで動く claude.ai のセッションから、非公開リポジトリと過去チャット検索が使えるかの確認
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 

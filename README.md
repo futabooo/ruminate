@@ -39,7 +39,7 @@ flowchart TD
     subgraph ai["claude.ai"]
         F["6. GitHub 連携を許可<br/>Search and reference chats をオン"]
         F --> G["7. 取り込みタスクを作る<br/>prompts/claude-ai-ingest.md"]
-        G --> H["8. 出題タスクを作る（予定）"]
+        G --> H["8. 出題タスクを作る<br/>prompts/claude-ai-review.md"]
     end
     C --> D
     C --> F
@@ -104,7 +104,7 @@ ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変
 
 ## claude.ai のタスクを作る
 
-claude.ai の新しい会話を毎日拾う取り込みタスクと、復習問題を出す出題タスク（予定）は、claude.ai のスケジュールタスクとして動きます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
+claude.ai の新しい会話を毎日拾う取り込みタスクと、復習問題を出す出題タスクは、claude.ai のスケジュールタスクとして動きます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
 
 ## 設定
 

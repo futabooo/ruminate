@@ -22,10 +22,10 @@ Claude などのAIエージェントと一緒にやったことを、安川康�
   claude.ai・ChatGPT の                  │
   エクスポート ─────────import──────────┤
                                         ▼
-claude.ai: 取り込みタスク（毎日・予定）──> ruminate-data（Private）
+claude.ai: 取り込みタスク（毎日）──> ruminate-data（Private）
   claude.ai の新しい会話                     ├─ logs/<agent>/…jsonl
                                              └─ review/…jsonl
-claude.ai: 出題タスク（毎晩・予定）<──DuckDBで読む──┘
+claude.ai: 出題タスク（毎晩）<──DuckDBで読む──┘
   出題 → スマホに通知 → 結果を review/ に書く
 ```
 
@@ -75,17 +75,23 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 
 ファイル名は会話の開始時刻と会話IDだけから決まるので、会話が続いても同じファイルを上書きする。
 
-### `review/items.jsonl`（出題タスクが書く・予定）
+### `review/items.jsonl`（出題タスクが書く）
 
 ```json
-{"id":"service-binding","question":"Worker 同士を Service Binding でつなぐと、なぜ遅くならない？","answer":"呼び出しがインターネットを経由せず Cloudflare の中で完結するから","source":"…","stage":1,"next_due":"2026-10-28","correct":0,"wrong":1}
+{"id":"service-binding","question":"Worker 同士を Service Binding でつなぐと、なぜ遅くならない？","answer":"呼び出しがインターネットを経由せず Cloudflare の中で完結するから","source":"claude-code/c0ffee00","topic":"cloudflare","stage":1,"next_due":"2026-10-30","correct":0,"wrong":1,"created_at":"2026-10-28","asked_at":"2026-10-29"}
 ```
 
-`stage` は復習の段階（翌日 → 1週間後 → 1か月後）。正解で次へ、間違えると最初に戻る。
+`stage` は復習の段階（0 新規 → 1 翌日 → 2 1週間後 → 3 1か月後 → 4 卒業）。正解で次へ、間違えると 1 に戻る。日付は JST。列の意味は `prompts/claude-ai-review.md`。
 
-### `review/history.jsonl`（予定）
+### `review/history.jsonl`（出題タスクが書く）
 
-いつ何を出して、どう答えたか。
+```json
+{"date":"2026-10-29","item":"service-binding","result":"correct"}
+```
+
+いつ何を出して、どう答えたか（`correct` / `wrong` / `unanswered`）。追記のみ。
+
+出題は 1 晩 3 問（期限切れが多ければ最大 5 問）。答えは同じ通知の下に入れ、本人は考えてから見て `1 ○ 2 × 3 ○` のように自己採点を返す。翌晩のタスクがその返事を読んで記録する。答えを翌晩まで伏せる案は、フィードバックが 1 日遅れるのと返事の手間で続かないので取らない。
 
 ## Claude Code の会話の読み方
 
@@ -131,6 +137,6 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 ## まだやっていないこと
 
 - `ruminate import` の DeepSeek 対応（`Export` トレイトの実装を1つ足す）
-- 出題タスクの手順書（`prompts/`）と、セットアップ用スキル。取り込みタスクの手順書は `prompts/claude-ai-ingest.md` にある（ファイル名は import と同じ、時刻は JST 固定、直近 7 日を毎回見直す）
+- セットアップ用スキル（`ruminate-setup`）。手順書は `prompts/` に 2 つある（取り込み: ファイル名は import と同じ、時刻は JST 固定、直近 7 日を毎回見直す。出題: 3 問、自己採点、翌晩に記録）。どちらも claude.ai 側で未検証
 - スケジュールで動くセッションから、非公開リポジトリと過去チャット検索が使えるかの確認
 - Codex CLI など、ほかのターミナルエージェントの読み込み

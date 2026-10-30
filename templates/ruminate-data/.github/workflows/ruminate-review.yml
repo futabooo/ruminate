@@ -1,8 +1,15 @@
 # ruminate: 復習問題の Issue に答えがコメントされたら、その場で採点する。
 # このファイルを ruminate-data の .github/workflows/ に置く。
-# 準備: Claude Code で `/install-github-app` を実行して ruminate-data に
-# Claude の GitHub App を入れ、CLAUDE_CODE_OAUTH_TOKEN（Pro / Max の場合）か
-# ANTHROPIC_API_KEY をリポジトリの secret に登録する。
+#
+# 認証は Workload Identity Federation。リポジトリに静的な鍵は置かず、
+# GitHub Actions の OIDC トークンを Anthropic の短命トークンに交換する。
+# 準備は templates/ruminate-data/README.md を参照。ID は秘密ではないので
+# リポジトリの variables（secrets ではない）に入れる:
+#   ANTHROPIC_FEDERATION_RULE_ID   fdrl_...
+#   ANTHROPIC_ORGANIZATION_ID      組織の UUID
+#   ANTHROPIC_SERVICE_ACCOUNT_ID   svac_...
+#   ANTHROPIC_WORKSPACE_ID         wrkspc_...（ルールが 1 つの workspace だけなら省略可）
+# ANTHROPIC_API_KEY を secret に置いてはいけない。あると federation より優先される。
 name: ruminate review
 
 on:
@@ -12,7 +19,7 @@ on:
 permissions:
   contents: write
   issues: write
-  id-token: write
+  id-token: write   # GitHub の OIDC トークンを取るのに必要
 
 jobs:
   grade:
@@ -32,9 +39,10 @@ jobs:
           fetch-depth: 0
       - uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064 # v1.0.265
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # API キーで動かすなら上を消してこちら:
-          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          anthropic_workspace_id: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
           claude_args: "--allowedTools Bash,Read,Edit,Write"
           prompt: |
             あなたは ruminate の採点係です。Issue #${{ github.event.issue.number }}

@@ -39,7 +39,7 @@ claude plugin validate plugin
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
 - `ruminate-data` の `test/hello.txt`（接続確認用）と `logs/claude-ai/2026/10/2026-10-30_2328_8821b5ab.jsonl`（そのときのチャット）は消してよい
-- `templates/ruminate-data/.github/workflows/ruminate-review.yml` を ruminate-data に入れて、コメント直後に採点が付くか確かめる（入力名 `prompt` / `claude_args` / `claude_code_oauth_token` は action.yml で確認済み。Action の中から `gh issue close` と `main` への push が通るかは未検証）
+- `templates/ruminate-data/.github/workflows/ruminate-review.yml` を ruminate-data に入れて、コメント直後に採点が付くか確かめる。認証は WIF（Console の Connect workload → GitHub Actions。API 従量課金）。（入力名 `prompt` / `claude_args` / `anthropic_federation_rule_id` などは action.yml で確認済み。Action の中から `gh issue close` と `main` への push が通るかは未検証）
 - 出題タスクの 2 晩目を確かめる: Issue #1 に答えを文章でコメントしたあと、翌晩の実行で採点と講評が付いて Issue が閉じ、`review/history.jsonl` に 3 行入り、`items.jsonl` の `stage` と `next_due` が進むか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 

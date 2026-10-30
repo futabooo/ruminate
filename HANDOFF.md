@@ -25,6 +25,8 @@ claude plugin validate plugin
 
 ## 気になっている点
 
+- 出題タスクは 2026-10-31（JST）に一度動かして確認済み: Issue #1（ラベル `ruminate-review`、3 問 + 折りたたみの答え）が立ち、`review/items.jsonl` が `ruminate-review` 名義で `main` に直接 commit された（PR にはならなかった）。タスクの作業ブランチ `claude/…` が `main` と同じ内容で残るが無害。`gh issue` と `main` への push はタスクから使える
+
 - Skill `ruminate-ingest` は 2026-10-30 に一度動かして確認済み: 10 会話が `main` に 1 会話 1 コミットで入り、ファイル名は `ruminate import` の出力と一致、全文も取れていた（export の時点より後に続いた会話はターン数が増えている）。時刻は分単位（秒は `:00`）
 
 - SessionEnd フックで `async: true` が効くかは未確認（`ruminate hook` 自体はすぐ戻る作りなので、効かなくても問題は小さい）
@@ -37,7 +39,7 @@ claude plugin validate plugin
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
 - `ruminate-data` の `test/hello.txt`（接続確認用）と `logs/claude-ai/2026/10/2026-10-30_2328_8821b5ab.jsonl`（そのときのチャット）は消してよい
-- 出題タスクを claude.ai で一度動かして確かめる（`prompts/review-task.md`。リポジトリに `ruminate-data` を選ぶ）。見るのは、Issue が立つか、`main` に直接 push できるか PR になるか
+- 出題タスクの 2 晩目を確かめる: Issue #1 に採点をコメントしたあと、翌晩の実行で Issue が閉じ、`review/history.jsonl` に 3 行入り、`items.jsonl` の `stage` と `next_due` が進むか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 
 ## 決めた方針（要点）

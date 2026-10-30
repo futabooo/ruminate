@@ -46,16 +46,21 @@ pub fn parse_conversation(c: &Value) -> Option<Session> {
     let messages = c.get("chat_messages").and_then(Value::as_array)?;
 
     // Exports are in order already; sorting by time is only insurance, and
-    // a stable sort keeps the order of messages with the same timestamp.
-    let mut ordered: Vec<(Option<DateTime<Utc>>, &Value)> = messages
-        .iter()
-        .map(|m| (time(m, "created_at"), m))
-        .collect();
+    // a stable sort keeps the order of messages with the same timestamp. A
+    // message without a time takes the previous one's (then the
+    // conversation's), so it stays where the export put it instead of
+    // sorting to the front.
+    let mut last_at = time(c, "created_at");
+    let mut ordered: Vec<(Option<DateTime<Utc>>, &Value)> = Vec::with_capacity(messages.len());
+    for m in messages {
+        let at = time(m, "created_at").or(last_at);
+        last_at = at.or(last_at);
+        ordered.push((at, m));
+    }
     ordered.sort_by_key(|(t, _)| *t);
 
     let mut turns: Vec<Turn> = Vec::new();
     let mut unknown = 0;
-    let mut last_at = time(c, "created_at");
     for (at, m) in ordered {
         let role = match m.get("sender").and_then(Value::as_str) {
             Some("human") => Role::User,
@@ -65,14 +70,10 @@ pub fn parse_conversation(c: &Value) -> Option<Session> {
                 continue;
             }
         };
-        let at = match at.or(last_at) {
-            Some(t) => t,
-            None => {
-                unknown += 1;
-                continue;
-            }
+        let Some(at) = at else {
+            unknown += 1;
+            continue;
         };
-        last_at = Some(at);
         let (text, mut actions) = content(m);
         if role == Role::User {
             actions.extend(attachments(m));

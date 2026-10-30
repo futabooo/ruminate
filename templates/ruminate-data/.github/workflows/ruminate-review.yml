@@ -34,8 +34,10 @@ jobs:
       github.event.comment.user.type != 'Bot' &&
       !startsWith(github.event.comment.body, '採点:')
     runs-on: ubuntu-latest
+    # One grading at a time across all Issues: each run rewrites the same
+    # review/ files, and two at once would make the second rebase conflict.
     concurrency:
-      group: ruminate-review-${{ github.event.issue.number }}
+      group: ruminate-review
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

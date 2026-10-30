@@ -102,9 +102,10 @@ fn chatgpt_follows_the_current_branch() {
         s.turns[1].text,
         "参照が有効な期間に付ける名前です。\n\n図も付けました。"
     );
+    // The image the assistant attached is noted, never stored.
     assert_eq!(
         s.turns[1].actions,
-        ["browser: search(\"rust lifetime 'a\")"]
+        ["browser: search(\"rust lifetime 'a\")", "image"]
     );
     assert_eq!(s.turns[3].actions, ["python: print(1)"]);
     assert_eq!(s.turns[3].text, "それは貼らないでください。");
@@ -234,4 +235,54 @@ fn import_writes_and_pushes() {
     assert_eq!(r.written, 1);
     assert!(!r.pushed);
     assert_eq!(git(&remote, &["rev-list", "--count", "main"]).trim(), "1");
+}
+
+#[test]
+fn claude_ai_message_without_time_keeps_its_place() {
+    let d = doc(CLAUDE_AI);
+    let mut c = conversations(&d)[0].clone();
+    // The first reply loses its timestamp: it must stay after the first
+    // prompt and take that prompt's time, not sort to the front.
+    c["chat_messages"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("created_at");
+    let s = claude_ai::parse_conversation(&c).unwrap();
+    let roles: Vec<Role> = s.turns.iter().map(|t| t.role).collect();
+    assert_eq!(
+        roles,
+        [Role::User, Role::Assistant, Role::User, Role::Assistant]
+    );
+    assert_eq!(s.turns[1].at, s.turns[0].at);
+    assert_eq!(s.unknown_lines, 0);
+}
+
+#[test]
+fn chatgpt_image_only_prompt_is_a_turn() {
+    let d = doc(CHATGPT);
+    let mut c = conversations(&d)[0].clone();
+    // The second prompt becomes an image with no text.
+    c["mapping"]["u2"]["message"]["content"] = json!({
+        "content_type": "multimodal_text",
+        "parts": [{"content_type": "image_asset_pointer", "asset_pointer": "file-service://x"}]
+    });
+    let s = chatgpt::parse_conversation(&c).unwrap();
+    let roles: Vec<Role> = s.turns.iter().map(|t| t.role).collect();
+    assert_eq!(
+        roles,
+        [Role::User, Role::Assistant, Role::User, Role::Assistant]
+    );
+    assert_eq!(s.turns[2].text, "");
+    assert_eq!(s.turns[2].actions, ["image"]);
+    // The reply after it is its own turn, not glued to the earlier reply.
+    assert_eq!(s.turns[3].text, "それは貼らないでください。");
+}
+
+#[test]
+fn chatgpt_times_round_to_the_millisecond() {
+    let d = doc(CHATGPT);
+    let mut c = conversations(&d)[0].clone();
+    c["create_time"] = json!(1792460000.123);
+    let s = chatgpt::parse_conversation(&c).unwrap();
+    assert_eq!(s.started_at.timestamp_millis(), 1_792_460_000_123);
 }

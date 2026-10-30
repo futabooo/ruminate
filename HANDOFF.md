@@ -35,7 +35,7 @@ claude plugin validate plugin
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - 手順書は `prompts/` に 2 つ（取り込み・出題）、作り方は `prompts/README.md`（2026-10-29、claude.ai 側で未検証）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
-- スケジュールで動く claude.ai のセッションから、非公開リポジトリと過去チャット検索が使えるかの確認
+- 取り込みタスクの形を決める。2026-10-30 に確認: リポジトリを選んだ Claude Code タスクには**過去チャット検索がない**（Web 検索と GitHub だけ）。作業は `claude/…` ブランチで行われる。リポジトリを選ばない普通のタスクには検索はあるが git がない。候補: (1) 普通のタスク + GitHub コネクタでファイル作成、(2) 普通のタスクが Claude Docs に書き Claude Code タスクが push、(3) タスクをやめて月 1 回の export + `ruminate import`
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 
 ## 決めた方針（要点）

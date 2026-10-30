@@ -4,7 +4,7 @@ AIエージェントとの会話を自分の非公開リポジトリにためて
 
 - ターミナルの Claude Code の会話を、会話が終わるたびに自動で非公開のデータリポジトリへ送ります
 - たまった会話は DuckDB でそのまま検索できます（`ruminate db`）
-- 毎晩の出題タスク（claude.ai のスケジュールタスク）が、このデータから復習問題を GitHub Issue に出します
+- 毎晩の出題タスク（claude.ai のスケジュールタスク）が、このデータから復習問題を GitHub Issue に出し、あなたが書いた答えを翌晩に採点します
 
 設計の背景は [docs/design.md](docs/design.md) にあります。
 
@@ -40,7 +40,7 @@ flowchart TD
         F["6. GitHub 連携とチャット検索をオン<br/>Skill ruminate-ingest を追加"]
         F --> G["7. チャットで「ruminate 取り込み」<br/>（週 1 くらい）"]
         F --> H["8. 出題タスクを作る<br/>リポジトリに ruminate-data を選ぶ<br/>prompts/review-task.md"]
-        H --> I["9. GitHub Issue の問題に<br/>採点をコメント（毎晩）"]
+        H --> I["9. GitHub Issue の問題に<br/>答えをコメント（毎晩）<br/>翌晩 Claude が採点"]
     end
     C --> D
     C --> F

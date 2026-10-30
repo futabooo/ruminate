@@ -31,26 +31,29 @@ flowchart TD
     subgraph pc["パソコン"]
         A["1. cargo install"] --> B["2. ruminate init<br/>データリポジトリと設定ファイル"]
         B --> C["3. ruminate db で中身を確認<br/>→ ruminate sync で送る"]
-        C -.-> E["5. 公式エクスポートを<br/>ruminate import（任意）"]
+        C -.-> E["5. 公式エクスポートを<br/>ruminate import（任意・全文が要るとき）"]
     end
     subgraph cc["Claude Code"]
         D["4. /plugin marketplace add<br/>/plugin install"]
     end
     subgraph ai["claude.ai"]
-        F["6. 出題タスクを作る<br/>リポジトリに ruminate-data を選ぶ<br/>prompts/review-task.md"]
-        F --> G["7. GitHub Issue の問題に<br/>採点をコメント（毎晩）"]
+        F["6. GitHub 連携とチャット検索をオン<br/>Skill ruminate-ingest を追加"]
+        F --> G["7. チャットで「ruminate 取り込み」<br/>（週 1 くらい）"]
+        F --> H["8. 出題タスクを作る<br/>リポジトリに ruminate-data を選ぶ<br/>prompts/review-task.md"]
+        H --> I["9. GitHub Issue の問題に<br/>採点をコメント（毎晩）"]
     end
     C --> D
     C --> F
-    E -.-> F
+    E -.-> H
 ```
 
 | 番号 | 書いてある場所 |
 |---|---|
 | 1〜3 | この下の「セットアップ」 |
 | 4 | 同じく「セットアップ」の最後 |
-| 5 | 「claude.ai や ChatGPT の会話を取り込む」 |
-| 6〜7 | [prompts/README.md](prompts/README.md) |
+| 5 | 「claude.ai や ChatGPT のエクスポートを取り込む」 |
+| 6〜7 | 「claude.ai の会話を取り込む」 |
+| 8〜9 | [prompts/README.md](prompts/README.md) |
 
 ## セットアップ
 
@@ -87,7 +90,23 @@ Claude Code にプラグインを入れます。会話の終わり（SessionEnd�
 | `ruminate hook` | プラグインのフックから呼ばれる。すぐ戻り、裏で `sync` を動かす |
 | `ruminate db` | ビューを用意した状態で DuckDB を開く。`ruminate db -ui` でブラウザのUI |
 
-## claude.ai や ChatGPT の会話を取り込む
+## claude.ai の会話を取り込む
+
+claude.ai の会話は、claude.ai のチャットで「ruminate 取り込み」と頼むと `ruminate-data` に入ります。スケジュールタスクには過去チャット検索がないので自動では動きませんが、頼むのは一言です。
+
+1. claude.ai の設定 → コネクタで GitHub をつなぎ、`ruminate-data` へのアクセスを許可する
+2. 設定 → メモリで「チャットの検索と参照」をオンにする
+3. 設定 → Skills で [skills/ruminate-ingest](skills/ruminate-ingest/SKILL.md) を追加する（フォルダを ZIP にしてアップロード）
+
+```sh
+cd skills && zip -r ruminate-ingest.zip ruminate-ingest
+```
+
+4. 新しいチャットで「ruminate 取り込み」と頼む。直近 7 日の会話を一覧で見せたあと、`logs/claude-ai/` に書く。「先月分」のように期間も言える
+
+検索で全文が取れない会話があるときは、その旨を伝えてくれます。確実に全文を残したいときは、下のエクスポートを使ってください。同じ会話は同じファイル名になるので、両方使っても重複しません。
+
+## claude.ai や ChatGPT のエクスポートを取り込む
 
 公式のエクスポート（claude.ai: 設定 → プライバシー → データをエクスポート、ChatGPT: 設定 → データコントロール → データをエクスポート）の ZIP を展開し、中の `conversations.json` を渡します。
 
@@ -105,7 +124,7 @@ ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変
 
 復習問題を出す出題タスクは、claude.ai のスケジュール済みタスク（リポジトリに `ruminate-data` を選んだ Claude Code タスク）として動き、問題を GitHub Issue に立てます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
 
-claude.ai の会話を毎日自動で拾うタスクはありません。スケジュールタスクの環境には過去チャット検索がないためで、claude.ai の会話は上のエクスポートで取り込みます。
+claude.ai の会話を毎日自動で拾うタスクはありません。スケジュールタスクの環境には過去チャット検索がないためで、claude.ai の会話は上の Skill かエクスポートで取り込みます。
 
 ## 設定
 

@@ -34,6 +34,7 @@ claude plugin validate plugin
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
+- Skill `ruminate-ingest` を claude.ai に入れて一度動かす（検索が全文を返すか、GitHub コネクタで 1 会話ずつ書けるか）。`ruminate-data` の `test/hello.txt` は接続確認用なので消してよい
 - 出題タスクを claude.ai で一度動かして確かめる（`prompts/review-task.md`。リポジトリに `ruminate-data` を選ぶ）。見るのは、Issue が立つか、`main` に直接 push できるか PR になるか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 
@@ -44,7 +45,7 @@ claude plugin validate plugin
 - データは JSONL、見るときは DuckDB（`ruminate db`）。Markdown は置かない
 - 1 会話 1 ファイル、変わったら丸ごと作り直す（元ファイルは追記のみ。claude-recall ADR-003）
 - 同じファイルを 2 か所から書かない: `logs/` はパソコン（`sync`・`import`）、`review/` は出題タスク
-- claude.ai の会話はスケジュールタスクからは読めない（2026-10-30 確認: 過去チャット検索がない）。取り込みタスクはやめ、公式エクスポート + `ruminate import` で入れる
+- claude.ai の会話はスケジュールタスクからは読めない（2026-10-30 確認: 過去チャット検索がない）。普通のチャットなら検索があり、GitHub コネクタで `main` に直接書けた（同日確認）。取り込みは Skill `ruminate-ingest`（`skills/`）にして本人が頼む形。全文が要るときは公式エクスポート + `ruminate import`
 - 出題は GitHub Issue 方式。Claude Code タスク（リポジトリ `ruminate-data`）が Issue を立て、本人がコメントで採点、翌晩に記録
 - 出題は『科学的根拠に基づく最強の勉強法』の方法（アクティブリコール・分散学習・交互学習・自己説明・すぐのフィードバック）
 - 何かを作る・設定する前に、仕組みと内容を見せて確認をもらう

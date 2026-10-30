@@ -21,7 +21,9 @@ Claude などのAIエージェントと一緒にやったことを、安川康�
   Claude Code の会話 ─────hook / sync──┐
   claude.ai・ChatGPT の                  │
   公式エクスポート ──────import────────┤
-                                        ▼
+claude.ai: Skill ruminate-ingest       │
+  本人が頼んだとき、過去チャット検索 ──┤
+  → GitHub コネクタで書く               ▼
                                ruminate-data（Private）
                                  ├─ logs/<agent>/…jsonl
                                  └─ review/…jsonl
@@ -32,9 +34,10 @@ claude.ai: 出題タスク（毎晩、Claude Code タスク）<──┘
 | 役割 | どこで動く | 何をする |
 |---|---|---|
 | `ruminate`（このリポジトリ） | パソコン | ターミナルの会話を `ruminate-data` に送る（`sync`）。公式エクスポートの取り込み（`import`） |
+| Skill `ruminate-ingest` | claude.ai の普通のチャット | 本人が「ruminate 取り込み」と頼んだとき、直近の会話を過去チャット検索で集め、GitHub コネクタで `logs/claude-ai/` に書く |
 | 出題タスク | claude.ai のスケジュール（リポジトリに `ruminate-data` を選んだ Claude Code タスク） | `ruminate-data` だけを読んで GitHub Issue に出題し、前回の採点を `review/` に書く |
 
-claude.ai の会話は、スケジュールタスクからは読めない（2026-10-30 に確認: タスクの環境には過去チャット検索がなく、リポジトリを選んでも選ばなくても同じ）。そのため claude.ai の会話は公式エクスポートを `ruminate import` で入れる。毎日自動で拾う取り込みタスクは作らない。
+claude.ai の会話は、スケジュールタスクからは読めない（2026-10-30 に確認: タスクの環境には過去チャット検索がなく、リポジトリを選んでも選ばなくても同じ）。一方、本人がいる普通のチャットには検索があり、GitHub コネクタは `main` に直接ファイルを書ける（同日に確認）。そこで取り込みは Skill にして、本人が一言頼む形にする。検索は抜粋しか返さないことがあるので、全文が要るときは公式エクスポートを `ruminate import` で入れる。ファイル名が同じなので両方使っても重複しない。
 
 ## リポジトリ
 
@@ -45,7 +48,7 @@ claude.ai の会話は、スケジュールタスクからは読めない（2026
 | dotfiles | 任意 | `~/.config/ruminate/config.toml` |
 
 - コード（公開）と、たまっていく個人データ（非公開）を分ける
-- 同じファイルを2か所から書かない: `logs/` はパソコンの ruminate（`sync` と `import`）、`review/` は出題タスクだけが書く。push の前に `pull --rebase` するので、同じ夜に複数が push してもぶつからない
+- 同じファイルを2か所から書かない: `logs/claude-code/` はパソコンの `sync`、`logs/claude-ai/` は Skill と `import`（同じ会話は同じファイル名なので上書きになるだけ）、`review/` は出題タスクだけが書く。push の前に `pull --rebase` するので、同じ夜に複数が push してもぶつからない
 - ruminate は書き込み用の clone を `~/.local/share/ruminate/data` に持ち、普段作業する clone とは分ける
 - 名前は「反芻する」の `ruminate`。Claude Code 以外のエージェントにも広げられるよう `claude-` は付けない（`claude-` で始まるプラグイン名は Anthropic 用に予約されている）
 

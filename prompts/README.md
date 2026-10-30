@@ -10,8 +10,9 @@
 
 claude.ai の会話を毎日拾う「取り込みタスク」は作りません。スケジュールタスクの環境には
 過去チャット検索がない（2026-10-30 に確認。リポジトリを選んでも選ばなくても同じ）ので、
-タスクから claude.ai の会話は読めません。claude.ai の会話は公式エクスポートを
-`ruminate import` で入れます（README の「claude.ai や ChatGPT の会話を取り込む」）。
+タスクから claude.ai の会話は読めません。代わりに、本人がいる普通のチャットで動く
+Skill（[../skills/ruminate-ingest/SKILL.md](../skills/ruminate-ingest/SKILL.md)）を使います。
+入れ方は README の「claude.ai の会話を取り込む」。
 
 claude.ai の画面の文言や場所は更新で変わります。見つからなければ設定画面の検索で
 「スケジュール」「GitHub」を探してください。

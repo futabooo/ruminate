@@ -23,25 +23,40 @@ Claude の GitHub App を ruminate-data に入れてくれます。鍵の登録�
 
 ### 2. Console で federation を設定する
 
-[platform.claude.com/settings/workload-identity-federation](https://platform.claude.com/settings/workload-identity-federation)
-を開き、**Connect workload** → **GitHub Actions** を選びます。ウィザードが issuer、
-service account、federation rule の 3 つをまとめて作ります。
+やることは「GitHub Actions が出す身分証明書（OIDC トークン）を Anthropic に信用させ、
+`ruminate-data` の `main` で動くワークフローだけに、採点用の service account として
+API を使わせる」設定です。Console のウィザードが 3 つのリソース（issuer、service
+account、federation rule）をまとめて作ってくれます。
 
-| 項目 | 値 |
-|---|---|
-| Issuer URL | `https://token.actions.githubusercontent.com`（プリセット） |
-| JWKS source | `discovery` |
-| Subject prefix | `repo:<あなたのアカウント>/ruminate-data:*`（末尾の `*` で前方一致） |
-| Audience | `https://api.anthropic.com`（既定のまま） |
-| Scope | `workspace:developer`（既定） |
-| Token lifetime | 600 秒（既定） |
-| Service account | 名前は `ruminate-review` など。採点に使う workspace のメンバーにする |
+1. 組織 ID を控える。[platform.claude.com/settings/organization](https://platform.claude.com/settings/organization)
+   に UUID（`00000000-0000-…`）がある
+2. [platform.claude.com/settings/workload-identity-federation](https://platform.claude.com/settings/workload-identity-federation)
+   を開き、**Connect workload** を押す
+3. プロバイダの一覧から **GitHub Actions** のタイルを選ぶ
+4. 画面の指示に沿って入力する。項目名は画面の更新で変わるので、意味で読み替えてください
 
-ウィザードの最後の「Test the connection」は、次の手順でワークフローを一度動かせば通ります
-（15 分の窓を逃しても、ルールの詳細ページから再テストできます）。
+   | 画面の項目 | 入れる値 | 意味 |
+   |---|---|---|
+   | Issuer URL | `https://token.actions.githubusercontent.com`（プリセット済み） | GitHub Actions の身分証明書を発行する人 |
+   | JWKS | `discovery`（既定） | 署名の検証鍵を GitHub から自動で取る |
+   | Subject prefix | `repo:<あなたのアカウント>/ruminate-data:ref:refs/heads/main` | `ruminate-data` の `main` で動くワークフローだけ |
+   | Claims（追加の条件） | `repository_owner` = `<あなたのアカウント>` | 念のための二重チェック |
+   | Audience | `https://api.anthropic.com`（既定） | そのまま |
+   | Service account 名 | `ruminate-review` など | 採点用の非人間アカウント |
+   | Workspace | 採点に使う workspace（既定のものでよい） | 利用料とレート制限がここに付く |
+   | Rule 名 | `ruminate-review-main` など | |
+   | Scope | `workspace:developer`（既定） | API キーと同じ権限 |
+   | Token lifetime | `600`（既定） | 発行されるトークンは 10 分で切れる |
 
-作られた ID を控えます: `fdrl_…`（rule）、`svac_…`（service account）、組織の UUID、
-workspace の `wrkspc_…`。
+   `issue_comment` で動くワークフローは `main` の文脈で走るので、subject は
+   `…:ref:refs/heads/main` に固定できます。`repo:…/ruminate-data:*` のように緩めると
+   PR からの実行も通るので、緩めません。
+5. **Verify issuer** があれば押す（GitHub の鍵を取れるかの事前確認）
+6. 作成すると「Test the connection」で 15 分間、接続を待つ画面になる。ここは一度閉じて
+   構いません。手順 3〜5 でワークフローを動かしたときに通ります（ルールの詳細ページから
+   再テストもできる）
+7. 作られた 3 つの ID を控える: **federation rule** の `fdrl_…`、**service account** の
+   `svac_…`、**workspace** の `wrkspc_…`。手順 1 の組織 UUID と合わせて 4 つ
 
 ### 3. リポジトリに variables を入れる
 

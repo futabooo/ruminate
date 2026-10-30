@@ -8,7 +8,9 @@
 #   ANTHROPIC_FEDERATION_RULE_ID   fdrl_...
 #   ANTHROPIC_ORGANIZATION_ID      組織の UUID
 #   ANTHROPIC_SERVICE_ACCOUNT_ID   svac_...
-#   ANTHROPIC_WORKSPACE_ID         wrkspc_...（ルールが 1 つの workspace だけなら省略可）
+#   ANTHROPIC_WORKSPACE_ID         wrkspc_...
+# federation rule の subject は repo:<owner>/ruminate-data:ref:refs/heads/main。
+# issue_comment のワークフローは main の文脈で走るので、これだけで通る。
 # ANTHROPIC_API_KEY を secret に置いてはいけない。あると federation より優先される。
 name: ruminate review
 

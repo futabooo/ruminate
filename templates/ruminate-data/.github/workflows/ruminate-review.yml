@@ -1,0 +1,104 @@
+# ruminate: 復習問題の Issue に答えがコメントされたら、その場で採点する。
+# このファイルを ruminate-data の .github/workflows/ に置く。
+# 準備: Claude Code で `/install-github-app` を実行して ruminate-data に
+# Claude の GitHub App を入れ、CLAUDE_CODE_OAUTH_TOKEN（Pro / Max の場合）か
+# ANTHROPIC_API_KEY をリポジトリの secret に登録する。
+name: ruminate review
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  id-token: write
+
+jobs:
+  grade:
+    # 復習の Issue へのコメントだけ。Claude 自身のコメントには反応しない。
+    if: >-
+      contains(github.event.issue.labels.*.name, 'ruminate-review') &&
+      github.event.issue.state == 'open' &&
+      github.event.comment.user.type != 'Bot' &&
+      !startsWith(github.event.comment.body, '採点:')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ruminate-review-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # API キーで動かすなら上を消してこちら:
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--allowedTools Bash,Read,Edit,Write"
+          prompt: |
+            あなたは ruminate の採点係です。Issue #${{ github.event.issue.number }}
+            に本人が答えをコメントしました。採点して講評を書き、記録して Issue を閉じてください。
+            本人に質問はしません。`logs/` には触りません。日付は JST（UTC+9）です。
+
+            ## 1. 出した問題を読む
+
+            `review/items.jsonl` の、`issue` が ${{ github.event.issue.number }} の行が今回の問題です。
+            `question` が問い、`answer` が模範解答、`id` が問題の ID です。
+            `review/history.jsonl` にこの Issue 番号の行がすでにあれば、採点済みなので
+            「採点済みです」とだけコメントして終わります。
+
+            ## 2. 本人の答えを読む
+
+            本人のコメント（`gh issue view ${{ github.event.issue.number }} --comments`）から、
+            番号付きの答えを読みます。Bot のコメントと「採点:」で始まるコメントは無視します。
+            同じ番号に複数の答えがあれば最後のものを使います。
+
+            ## 3. 採点する
+
+            問題ごとに本人の答えを模範解答と照らします。
+
+            - ○: 答えの核心（なぜそうなるか、何と何が違うか）を自分の言葉で押さえている。
+              言い回しや細部の違いは問わない
+            - ×: 核心が違う、核心に触れていない、または「○」「わからない」のような一言だけで
+              説明がない。自己採点だけ書いてあっても説明がなければ ×
+            - 未回答: その番号への答えがない
+
+            甘く付けません。核心が抜けていれば × にして、何が抜けたかを講評で伝えます。
+
+            ## 4. 記録する
+
+            - ○: `review/history.jsonl` に
+              {"date":"<今日 JST>","item":"<id>","result":"correct","issue":${{ github.event.issue.number }}}
+              を追記。`items.jsonl` のその行の `correct` を 1 増やし、`stage` を 1 つ進め、
+              `next_due` を stage に合わせる（1: 翌日、2: 7 日後、3: 30 日後、4: 出さない）
+            - ×: `result` は `wrong`。`wrong` を 1 増やし、`stage` を 1、`next_due` を翌日にする
+            - 未回答: `result` は `unanswered`。`items.jsonl` は変えない
+
+            `items.jsonl` は 1 行 1 問の JSON で、該当行だけ書き換えます。ほかの行と列は
+            そのまま残します。
+
+            ## 5. 講評をコメントして閉じる
+
+            コメントは「採点:」で始めます（この Action が自分のコメントに反応しないため）。
+            問題ごとに 1〜2 文。○ なら何が押さえられていたか、× なら何が抜けていたか・
+            どう違うかを、模範解答を引きながら書きます。責めず、次に思い出せる言い方にします。
+            未回答の問題は「未回答。今夜もう一度出します」と書きます。
+
+            形:
+
+                採点: ○ 2 / × 1
+
+                1. ○ Conscrypt APEX を見ないという核心が書けています。
+                2. × 「別プロセス」までは合っていますが、人間が承認ダイアログに直接答えられる点が抜けています。
+                3. ○ 追跡設定まで自動になる、で正解です。
+
+            `gh issue close ${{ github.event.issue.number }} --body-file <講評のファイル>` で閉じます。
+
+            ## 6. push する
+
+                git add review
+                git -c user.name=ruminate-review -c user.email=ruminate-review@users.noreply.github.com \
+                    commit -q -m "ruminate: grade issue #${{ github.event.issue.number }}"
+                git pull -q --rebase origin main
+                git push -q origin HEAD:main

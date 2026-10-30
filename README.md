@@ -40,7 +40,8 @@ flowchart TD
         F["6. GitHub 連携とチャット検索をオン<br/>Skill ruminate-ingest を追加"]
         F --> G["7. チャットで「ruminate 取り込み」<br/>（週 1 くらい）"]
         F --> H["8. 出題タスクを作る<br/>リポジトリに ruminate-data を選ぶ<br/>prompts/review-task.md"]
-        H --> I["9. GitHub Issue の問題に<br/>答えをコメント（毎晩）<br/>翌晩 Claude が採点"]
+        H --> I["9. GitHub Issue の問題に<br/>答えをコメント（毎晩）"]
+        H -.-> J["10. ruminate-data に採点の<br/>Action を置く（任意・即時採点）<br/>templates/ruminate-data"]
     end
     C --> D
     C --> F
@@ -54,6 +55,7 @@ flowchart TD
 | 5 | 「claude.ai や ChatGPT のエクスポートを取り込む」 |
 | 6〜7 | 「claude.ai の会話を取り込む」 |
 | 8〜9 | [prompts/README.md](prompts/README.md) |
+| 10 | [templates/ruminate-data/README.md](templates/ruminate-data/README.md) |
 
 ## セットアップ
 
@@ -123,6 +125,8 @@ ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変
 ## claude.ai のタスクを作る
 
 復習問題を出す出題タスクは、claude.ai のスケジュール済みタスク（リポジトリに `ruminate-data` を選んだ Claude Code タスク）として動き、問題を GitHub Issue に立てます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
+
+答えをコメントした直後に採点してほしいなら、`ruminate-data` に GitHub Actions のワークフローを 1 つ置きます（[templates/ruminate-data](templates/ruminate-data/README.md)）。置かない場合は翌晩の出題タスクが採点します。
 
 claude.ai の会話を毎日自動で拾うタスクはありません。スケジュールタスクの環境には過去チャット検索がないためで、claude.ai の会話は上の Skill かエクスポートで取り込みます。
 

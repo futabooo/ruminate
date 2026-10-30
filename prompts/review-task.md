@@ -33,7 +33,7 @@
 ### `review/items.jsonl`（1 行 1 問）
 
 ```json
-{"id":"service-binding","question":"Worker 同士を Service Binding でつなぐと、なぜ遅くならない？","answer":"呼び出しがインターネットを経由せず Cloudflare の中で完結するから","source":"claude-code/c0ffee00","topic":"cloudflare","stage":1,"next_due":"2026-10-30","correct":0,"wrong":1,"created_at":"2026-10-28","asked_at":"2026-10-29","issue":12}
+{"id":"service-binding","question":"Worker 同士を Service Binding でつなぐと、なぜ遅くならない？","answer":"呼び出しがインターネットを経由せず Cloudflare の中で完結するから","source":"claude-code/c0ffee00","topic":"cloudflare","kind":"mechanism","stage":1,"next_due":"2026-10-30","correct":0,"wrong":1,"created_at":"2026-10-28","asked_at":"2026-10-29","issue":12}
 ```
 
 | 列 | 内容 |
@@ -43,6 +43,7 @@
 | answer | 答え。2〜3 文。会話の中で本人が納得した説明を使う |
 | source | `<agent>/<会話 ID の先頭 8 文字>` |
 | topic | 話題の短い名前。交互学習でばらすのに使う |
+| kind | `mechanism`（仕組み）、`decision`（判断）、`procedure`（手順）のどれか |
 | stage | 0: 新規、1: 翌日、2: 1 週間後、3: 1 か月後、4: 卒業（出さない） |
 | next_due | 次に出す日（JST） |
 | correct / wrong | 累計 |
@@ -129,7 +130,7 @@ gh issue close <番号> --body-file /tmp/grading.md
 3. 1 と 2 で 3 問に足りなければ、**新しい問題を作る**（次の手順）
 
 出すのは **3 問**。期限が来た問題が多い日は **最大 5 問** まで。残りは翌日に回します。
-同じ `topic` が続かないよう並べ替えます。
+同じ `topic` が続かないよう並べ替え、`kind` もできるだけ混ぜます。
 
 ### 4. 新しい問題を作る
 
@@ -138,9 +139,23 @@ gh issue close <番号> --body-file /tmp/grading.md
 DuckDB があれば `duckdb/init.sql` 相当のビューを使っても構いませんが、`jq` や普通の
 テキスト処理で十分です。
 
+問いの型は 3 つ。1 晩の中で型も混ぜます（交互学習）。
+
+| 型 | 問いの形 | 材料 |
+|---|---|---|
+| 仕組み | 「なぜそうなる？」「X と Y はどう違う？」 | 本人が質問して理解した事柄、調べて分かった仕様 |
+| 判断 | 「なぜ A ではなく B にした？」「B の利点と欠点は？」「どんな条件なら A に戻す？」 | コードや設計を変えた会話。`actions` に `Edit:` や `Write:` があり、返答の文章に理由や比較が書いてあるもの |
+| 手順 | 「X するにはどうする？」「X が失敗したら何を見る？」 | つまずいて解決した会話 |
+
+「判断」の問いは、答えに **理由と、比べた案との違い（利点・欠点）** を含めます。例:
+
+- 問: ruminate の会話ログで、Markdown を置かずに JSONL + DuckDB にしたのはなぜ？ Markdown にした場合の利点と欠点は？
+- 答: 人が直接読まず DuckDB で横断検索するので、整形の手間がない JSONL でよい。Markdown は GitHub 上でそのまま読める利点があるが、1 会話 2 ファイルになり、集計や出題タスクからの読み込みに変換が要る。
+
 作り方:
 
 - 本人が質問して理解した事柄、本人が決めたことの理由、調べて分かった仕様などから選ぶ
+- 判断の問いは、理由や比較が **会話に書いてあるときだけ** 作る。変更の行（`Edit:`）だけで理由が書かれていない会話から、理由を推測して問題にしない
 - 1 つの会話から一度に作るのは 1 問まで。`items.jsonl` の `source` にすでにある会話は、
   別の話題が残っていない限り使わない
 - 単語の暗記ではなく、理由や仕組みを言わせる問いにする

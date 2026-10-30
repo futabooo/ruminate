@@ -25,6 +25,8 @@ claude plugin validate plugin
 
 ## 気になっている点
 
+- Skill `ruminate-ingest` は 2026-10-30 に一度動かして確認済み: 10 会話が `main` に 1 会話 1 コミットで入り、ファイル名は `ruminate import` の出力と一致、全文も取れていた（export の時点より後に続いた会話はターン数が増えている）。時刻は分単位（秒は `:00`）
+
 - SessionEnd フックで `async: true` が効くかは未確認（`ruminate hook` 自体はすぐ戻る作りなので、効かなくても問題は小さい）
 - Ctrl+C やターミナルを閉じたときに SessionEnd が動くかは未確認（SessionStart で回収する作り）
 - 会話を再開すると、前の会話の行が新しいファイルにもコピーされるので、同じやりとりが 2 つの会話に重複して記録されることがある
@@ -34,7 +36,7 @@ claude plugin validate plugin
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
-- Skill `ruminate-ingest` を claude.ai に入れて一度動かす（検索が全文を返すか、GitHub コネクタで 1 会話ずつ書けるか）。`ruminate-data` の `test/hello.txt` は接続確認用なので消してよい
+- `ruminate-data` の `test/hello.txt`（接続確認用）と `logs/claude-ai/2026/10/2026-10-30_2328_8821b5ab.jsonl`（そのときのチャット）は消してよい
 - 出題タスクを claude.ai で一度動かして確かめる（`prompts/review-task.md`。リポジトリに `ruminate-data` を選ぶ）。見るのは、Issue が立つか、`main` に直接 push できるか PR になるか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 

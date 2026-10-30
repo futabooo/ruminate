@@ -20,22 +20,21 @@ Claude などのAIエージェントと一緒にやったことを、安川康�
 パソコン: ruminate（Rust）
   Claude Code の会話 ─────hook / sync──┐
   claude.ai・ChatGPT の                  │
-  エクスポート ─────────import──────────┤
+  公式エクスポート ──────import────────┤
                                         ▼
-claude.ai: 取り込みタスク（毎日）──> ruminate-data（Private）
-  claude.ai の新しい会話                     ├─ logs/<agent>/…jsonl
-                                             └─ review/…jsonl
-claude.ai: 出題タスク（毎晩）<──DuckDBで読む──┘
-  出題 → スマホに通知 → 結果を review/ に書く
+                               ruminate-data（Private）
+                                 ├─ logs/<agent>/…jsonl
+                                 └─ review/…jsonl
+claude.ai: 出題タスク（毎晩、Claude Code タスク）<──┘
+  logs/ を読んで出題 → GitHub Issue → 本人が採点をコメント → 翌晩 review/ に記録
 ```
 
 | 役割 | どこで動く | 何をする |
 |---|---|---|
 | `ruminate`（このリポジトリ） | パソコン | ターミナルの会話を `ruminate-data` に送る（`sync`）。公式エクスポートの取り込み（`import`） |
-| 取り込みタスク | claude.ai のスケジュール | claude.ai の新しい会話を `logs/claude-ai/` に書く。通知しない |
-| 出題タスク | claude.ai のスケジュール | `ruminate-data` だけを読んで出題し、結果を `review/` に書く。出題があるときだけ通知 |
+| 出題タスク | claude.ai のスケジュール（リポジトリに `ruminate-data` を選んだ Claude Code タスク） | `ruminate-data` だけを読んで GitHub Issue に出題し、前回の採点を `review/` に書く |
 
-claude.ai の会話を読めるのは claude.ai の中で動くセッション（過去チャット検索のツール）だけなので、取り込みは claude.ai のタスクが受け持つ。過去分や全文の取りこぼしは、公式エクスポートを `ruminate import` で取り込んで埋める。
+claude.ai の会話は、スケジュールタスクからは読めない（2026-10-30 に確認: タスクの環境には過去チャット検索がなく、リポジトリを選んでも選ばなくても同じ）。そのため claude.ai の会話は公式エクスポートを `ruminate import` で入れる。毎日自動で拾う取り込みタスクは作らない。
 
 ## リポジトリ
 
@@ -46,7 +45,7 @@ claude.ai の会話を読めるのは claude.ai の中で動くセッション�
 | dotfiles | 任意 | `~/.config/ruminate/config.toml` |
 
 - コード（公開）と、たまっていく個人データ（非公開）を分ける
-- 同じファイルを2か所から書かない: `logs/claude-code/` はパソコンの ruminate、`logs/claude-ai/` は取り込みタスク、`review/` は出題タスクだけが書く。push の前に `pull --rebase` するので、同じ夜に複数が push してもぶつからない
+- 同じファイルを2か所から書かない: `logs/` はパソコンの ruminate（`sync` と `import`）、`review/` は出題タスクだけが書く。push の前に `pull --rebase` するので、同じ夜に複数が push してもぶつからない
 - ruminate は書き込み用の clone を `~/.local/share/ruminate/data` に持ち、普段作業する clone とは分ける
 - 名前は「反芻する」の `ruminate`。Claude Code 以外のエージェントにも広げられるよう `claude-` は付けない（`claude-` で始まるプラグイン名は Anthropic 用に予約されている）
 
@@ -81,7 +80,7 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 {"id":"service-binding","question":"Worker 同士を Service Binding でつなぐと、なぜ遅くならない？","answer":"呼び出しがインターネットを経由せず Cloudflare の中で完結するから","source":"claude-code/c0ffee00","topic":"cloudflare","stage":1,"next_due":"2026-10-30","correct":0,"wrong":1,"created_at":"2026-10-28","asked_at":"2026-10-29"}
 ```
 
-`stage` は復習の段階（0 新規 → 1 翌日 → 2 1週間後 → 3 1か月後 → 4 卒業）。正解で次へ、間違えると 1 に戻る。日付は JST。列の意味は `prompts/claude-ai-review.md`。
+`stage` は復習の段階（0 新規 → 1 翌日 → 2 1週間後 → 3 1か月後 → 4 卒業）。正解で次へ、間違えると 1 に戻る。日付は JST。列の意味は `prompts/review-task.md`。
 
 ### `review/history.jsonl`（出題タスクが書く）
 
@@ -91,7 +90,7 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 
 いつ何を出して、どう答えたか（`correct` / `wrong` / `unanswered`）。追記のみ。
 
-出題は 1 晩 3 問（期限切れが多ければ最大 5 問）。答えは同じ通知の下に入れ、本人は考えてから見て `1 ○ 2 × 3 ○` のように自己採点を返す。翌晩のタスクがその返事を読んで記録する。答えを翌晩まで伏せる案は、フィードバックが 1 日遅れるのと返事の手間で続かないので取らない。
+出題は 1 晩 3 問（期限切れが多ければ最大 5 問）。問題は `ruminate-data` の GitHub Issue として立て（ラベル `ruminate-review`）、答えは同じ Issue の折りたたみに入れる。本人は考えてから開き、`1 ○ 2 × 3 ○` のように自己採点をコメントする。翌晩のタスクが Issue のコメントを読んで記録し、Issue を閉じる。通知は GitHub のものを使う。claude.ai の会話で返事を受ける案は、タスクに過去チャット検索がないので取れない。答えを翌晩まで伏せる案は、フィードバックが 1 日遅れるのと返事の手間で続かないので取らない。
 
 ## Claude Code の会話の読み方
 
@@ -130,13 +129,14 @@ JSONL。人が直接読むことはなく、DuckDB（CLI・UI・クライアン�
 
 1. `cargo install` → `ruminate init`（`gh` でデータリポジトリ作成、設定ファイル、これまでの会話の変換）
 2. Claude Code で `/plugin marketplace add` と `/plugin install`
-3. claude.ai でセットアップ用スキル（`ruminate-setup`・予定）を入れて「ruminateをセットアップして」と頼む。取り込みタスクと出題タスクを、内容を見せて承認をもらってから作る
+3. claude.ai のスケジュール済みタスクに出題タスクを作る（`prompts/README.md`）。将来はセットアップ用スキル（`ruminate-setup`・予定）で、内容を見せて承認をもらってから作る
 
 手でやるしかないこと: プラグインのインストール、claude.ai から GitHub に入る許可、タスク作成の承認、「Search and reference chats」の設定。手順は `prompts/README.md`。
 
 ## まだやっていないこと
 
 - `ruminate import` の DeepSeek 対応（`Export` トレイトの実装を1つ足す）
-- セットアップ用スキル（`ruminate-setup`）。手順書は `prompts/` に 2 つある（取り込み: ファイル名は import と同じ、時刻は JST 固定、直近 7 日を毎回見直す。出題: 3 問、自己採点、翌晩に記録）。どちらも claude.ai 側で未検証
+- 出題タスクを claude.ai で一度動かして確かめる（`prompts/review-task.md`。Issue が立つか、`main` に push できるか PR になるか）
+- セットアップ用スキル（`ruminate-setup`）
 - スケジュールで動くセッションから、非公開リポジトリと過去チャット検索が使えるかの確認
 - Codex CLI など、ほかのターミナルエージェントの読み込み

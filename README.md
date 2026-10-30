@@ -4,7 +4,7 @@ AIエージェントとの会話を自分の非公開リポジトリにためて
 
 - ターミナルの Claude Code の会話を、会話が終わるたびに自動で非公開のデータリポジトリへ送ります
 - たまった会話は DuckDB でそのまま検索できます（`ruminate db`）
-- 毎晩の振り返りタスク（claude.ai のスケジュールタスク）が、このデータから復習問題を出します
+- 毎晩の出題タスク（claude.ai のスケジュールタスク）が、このデータから復習問題を GitHub Issue に出します
 
 設計の背景は [docs/design.md](docs/design.md) にあります。
 
@@ -37,13 +37,12 @@ flowchart TD
         D["4. /plugin marketplace add<br/>/plugin install"]
     end
     subgraph ai["claude.ai"]
-        F["6. GitHub 連携を許可<br/>Search and reference chats をオン"]
-        F --> G["7. 取り込みタスクを作る<br/>prompts/claude-ai-ingest.md"]
-        G --> H["8. 出題タスクを作る<br/>prompts/claude-ai-review.md"]
+        F["6. 出題タスクを作る<br/>リポジトリに ruminate-data を選ぶ<br/>prompts/review-task.md"]
+        F --> G["7. GitHub Issue の問題に<br/>採点をコメント（毎晩）"]
     end
     C --> D
     C --> F
-    G -- "手動実行して確認" --> C
+    E -.-> F
 ```
 
 | 番号 | 書いてある場所 |
@@ -51,7 +50,7 @@ flowchart TD
 | 1〜3 | この下の「セットアップ」 |
 | 4 | 同じく「セットアップ」の最後 |
 | 5 | 「claude.ai や ChatGPT の会話を取り込む」 |
-| 6〜8 | [prompts/README.md](prompts/README.md) |
+| 6〜7 | [prompts/README.md](prompts/README.md) |
 
 ## セットアップ
 
@@ -104,7 +103,9 @@ ruminate import ~/Downloads/data-2026-10-28/conversations.json             # 変
 
 ## claude.ai のタスクを作る
 
-claude.ai の新しい会話を毎日拾う取り込みタスクと、復習問題を出す出題タスクは、claude.ai のスケジュールタスクとして動きます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
+復習問題を出す出題タスクは、claude.ai のスケジュール済みタスク（リポジトリに `ruminate-data` を選んだ Claude Code タスク）として動き、問題を GitHub Issue に立てます。作り方と貼る手順書は [prompts/README.md](prompts/README.md) にあります。
+
+claude.ai の会話を毎日自動で拾うタスクはありません。スケジュールタスクの環境には過去チャット検索がないためで、claude.ai の会話は上のエクスポートで取り込みます。
 
 ## 設定
 

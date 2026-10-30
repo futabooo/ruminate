@@ -33,9 +33,8 @@ claude plugin validate plugin
 ## まだ作っていないもの
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
-- 手順書は `prompts/` に 2 つ（取り込み・出題）、作り方は `prompts/README.md`（2026-10-29、claude.ai 側で未検証）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
-- 取り込みタスクの形を決める。2026-10-30 に確認: リポジトリを選んだ Claude Code タスクには**過去チャット検索がない**（Web 検索と GitHub だけ）。作業は `claude/…` ブランチで行われる。リポジトリを選ばない普通のタスクには検索はあるが git がない。候補: (1) 普通のタスク + GitHub コネクタでファイル作成、(2) 普通のタスクが Claude Docs に書き Claude Code タスクが push、(3) タスクをやめて月 1 回の export + `ruminate import`
+- 出題タスクを claude.ai で一度動かして確かめる（`prompts/review-task.md`。リポジトリに `ruminate-data` を選ぶ）。見るのは、Issue が立つか、`main` に直接 push できるか PR になるか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 
 ## 決めた方針（要点）
@@ -44,7 +43,8 @@ claude plugin validate plugin
 - コード（Public: `ruminate`）と個人データ（Private: `ruminate-data`）を分ける
 - データは JSONL、見るときは DuckDB（`ruminate db`）。Markdown は置かない
 - 1 会話 1 ファイル、変わったら丸ごと作り直す（元ファイルは追記のみ。claude-recall ADR-003）
-- 同じファイルを 2 か所から書かない: `logs/claude-code/` はパソコン、`logs/claude-ai/` は取り込みタスク、`review/` は出題タスク
-- claude.ai の会話の取り込みは、出題タスクとは別の取り込みタスクが担当。過去分は公式エクスポートで埋める
+- 同じファイルを 2 か所から書かない: `logs/` はパソコン（`sync`・`import`）、`review/` は出題タスク
+- claude.ai の会話はスケジュールタスクからは読めない（2026-10-30 確認: 過去チャット検索がない）。取り込みタスクはやめ、公式エクスポート + `ruminate import` で入れる
+- 出題は GitHub Issue 方式。Claude Code タスク（リポジトリ `ruminate-data`）が Issue を立て、本人がコメントで採点、翌晩に記録
 - 出題は『科学的根拠に基づく最強の勉強法』の方法（アクティブリコール・分散学習・交互学習・自己説明・すぐのフィードバック）
 - 何かを作る・設定する前に、仕組みと内容を見せて確認をもらう

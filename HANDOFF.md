@@ -26,7 +26,7 @@ claude plugin validate plugin
 ## 気になっている点
 
 - 即時採点の Action（`templates/ruminate-data/`）は 2026-10-31（JST）に ruminate-data で確認済み: Issue #1 のコメントに「採点:」の講評が付き、Issue が閉じ、`review/` が `ruminate-review` 名義で `main` に push された。つまずいた点は 2 つ。(1) ruminate-data は 2026-07-15 以降に作ったので OIDC の `sub` が `repo:futabooo@944185/ruminate-data@1436689485:ref:refs/heads/main` の新形式で、ルールの subject prefix を直す必要があった。(2) Console のクレジットが 0 だと認証は通っても API 呼び出しが失敗する（Action のログには理由が出ない）
-- 出題タスクは 2026-10-31（JST）に一度動かして確認済み: Issue #1（ラベル `ruminate-review`、3 問 + 折りたたみの答え）が立ち、`review/items.jsonl` が `ruminate-review` 名義で `main` に直接 commit された（PR にはならなかった）。タスクの作業ブランチ `claude/…` が `main` と同じ内容で残るが無害。`gh issue` と `main` への push はタスクから使える
+- 出題タスクは 2026-10-31（JST）に一度動かして確認済み: Issue #1（ラベル `ruminate-review`、3 問 + 折りたたみの答え）が立ち、`review/items.jsonl` が `ruminate-review` 名義で `main` に直接 commit された（PR にはならなかった）。タスクの作業ブランチ `claude/…` が `main` と同じ内容で残るが無害（2026-10-31 に一度消した。次の実行でまたできる）。`gh issue` と `main` への push はタスクから使える
 
 - Skill `ruminate-ingest` は 2026-10-30 に一度動かして確認済み: 10 会話が `main` に 1 会話 1 コミットで入り、ファイル名は `ruminate import` の出力と一致、全文も取れていた（export の時点より後に続いた会話はターン数が増えている）。時刻は分単位（秒は `:00`）
 
@@ -39,7 +39,6 @@ claude plugin validate plugin
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
-- `ruminate-data` の `test/hello.txt`（接続確認用）と `logs/claude-ai/2026/10/2026-10-30_2328_8821b5ab.jsonl`（そのときのチャット）は消してよい
 - 出題タスクの 2 晩目を確かめる: Issue #1 に答えを文章でコメントしたあと、翌晩の実行で採点と講評が付いて Issue が閉じ、`review/history.jsonl` に 3 行入り、`items.jsonl` の `stage` と `next_due` が進むか
 - Codex CLI など、ほかのターミナルエージェントの読み込み
 

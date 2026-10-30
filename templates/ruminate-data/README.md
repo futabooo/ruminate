@@ -39,8 +39,9 @@ account、federation rule）をまとめて作ってくれます。
    |---|---|---|
    | Issuer URL | `https://token.actions.githubusercontent.com`（プリセット済み） | GitHub Actions の身分証明書を発行する人 |
    | JWKS | `discovery`（既定） | 署名の検証鍵を GitHub から自動で取る |
-   | Subject prefix | `repo:<あなたのアカウント>/ruminate-data:ref:refs/heads/main` | `ruminate-data` の `main` で動くワークフローだけ |
+   | Subject prefix | 下の「subject の形式」を参照 | `ruminate-data` の `main` で動くワークフローだけ |
    | Claims（追加の条件） | `repository_owner` = `<あなたのアカウント>` | 念のための二重チェック |
+   | 許可されたイベント | `issue_comment` を含める（「プッシュのみ」のままでは一致しない） |  |
    | Audience | `https://api.anthropic.com`（既定） | そのまま |
    | Service account 名 | `ruminate-review` など | 採点用の非人間アカウント |
    | Workspace | 採点に使う workspace（既定のものでよい） | 利用料とレート制限がここに付く |
@@ -48,8 +49,26 @@ account、federation rule）をまとめて作ってくれます。
    | Scope | `workspace:developer`（既定） | API キーと同じ権限 |
    | Token lifetime | `600`（既定） | 発行されるトークンは 10 分で切れる |
 
+   **subject の形式**: GitHub は 2026 年 7 月 15 日以降に作られたリポジトリでは、`sub` に
+   数値 ID を含めます。`ruminate-data` をそれ以降に作ったなら新しい形式です。
+
+   | リポジトリの作成日 | subject prefix |
+   |---|---|
+   | 2026-07-15 より前 | `repo:<アカウント>/ruminate-data:ref:refs/heads/main` |
+   | 2026-07-15 以降 | `repo:<アカウント>@<ユーザー ID>/ruminate-data@<リポジトリ ID>:ref:refs/heads/main` |
+
+   ID はこれで取れます。
+
+   ```sh
+   gh api repos/<アカウント>/ruminate-data --jq '"owner_id=\(.owner.id) repo_id=\(.id) created=\(.created_at)"'
+   ```
+
+   ウィザードの「GitHub 組織」「リポジトリ」欄は旧形式で組み立てるので、新形式なら
+   「詳細な一致オプション」で subject prefix を直接書きます。間違えると Console の
+   認証イベントに `match_subject_prefix` で失敗が並びます。
+
    `issue_comment` で動くワークフローは `main` の文脈で走るので、subject は
-   `…:ref:refs/heads/main` に固定できます。`repo:…/ruminate-data:*` のように緩めると
+   `…:ref:refs/heads/main` に固定できます。`…/ruminate-data:*` のように緩めると
    PR からの実行も通るので、緩めません。
 5. **Verify issuer** があれば押す（GitHub の鍵を取れるかの事前確認）
 6. 作成すると「Test the connection」で 15 分間、接続を待つ画面になる。ここは一度閉じて

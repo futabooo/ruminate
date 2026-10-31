@@ -29,7 +29,7 @@ claude.ai / ChatGPT のエクスポート ────> ruminate import ──�
 ```mermaid
 flowchart TD
     subgraph pc["パソコン"]
-        A["1. cargo install"] --> B["2. ruminate init<br/>データリポジトリと設定ファイル"]
+        A["1. インストール<br/>（インストーラか cargo）"] --> B["2. ruminate init<br/>データリポジトリと設定ファイル"]
         B --> C["3. ruminate db で中身を確認<br/>→ ruminate sync で送る"]
         C -.-> E["5. 公式エクスポートを<br/>ruminate import（任意・全文が要るとき）"]
     end
@@ -59,10 +59,12 @@ flowchart TD
 
 ## セットアップ
 
-必要なもの: Rust（`cargo`）、`git`、データリポジトリに push できる GitHub の認証。`gh` があればリポジトリ作成も自動、`duckdb` があれば `ruminate db` が使えます。
+必要なもの: `git`、データリポジトリに push できる GitHub の認証。`gh` があればリポジトリ作成も自動、`duckdb` があれば `ruminate db` が使えます。Rust は要りません（`cargo` で自分でビルドしてもかまいません）。
 
 ```sh
-# 1. インストール
+# 1. インストール（macOS / Linux。GitHub Releases のバイナリを ~/.cargo/bin に置く）
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/futabooo/ruminate/releases/latest/download/ruminate-installer.sh | sh
+# または、Rust があるなら
 cargo install --git https://github.com/futabooo/ruminate
 
 # 2. データリポジトリと設定ファイルを用意して、これまでの会話を変換（まだ送らない）
@@ -75,7 +77,7 @@ ruminate db
 ruminate sync
 ```
 
-Claude Code にプラグインを入れます。会話の終わり（SessionEnd）と始まり（SessionStart）に、裏で `ruminate sync` が動きます。
+Claude Code にプラグインを入れます。会話の終わり（SessionEnd）と始まり（SessionStart）に、裏で `ruminate sync` が動きます。`ruminate` が PATH に無いあいだは何もしません（エラーも出ません）。
 
 ```
 /plugin marketplace add futabooo/ruminate
@@ -184,6 +186,8 @@ cargo test
 claude --plugin-dir plugin    # プラグインを手元のファイルから読み込んで試す
 claude plugin validate plugin
 ```
+
+リリースは [cargo-dist](https://axodotdev.github.io/cargo-dist) です。`Cargo.toml` の `version` を上げて `v0.2.0` のようなタグを push すると、`.github/workflows/release.yml` が macOS（arm64 / x86_64）と Linux（x86_64 / arm64）のバイナリとインストーラを GitHub Releases に置きます。設定は `dist-workspace.toml` にあり、ワークフローは `dist generate` で作り直すので手で編集しません。
 
 Claude Code の会話ファイルの形式は内部仕様で、バージョンによって変わります。読み込みは `src/source/claude_code.rs` にまとまっていて、知らない行は飛ばします。会話ファイルの読み方は [claude-recall](https://github.com/babarot/claude-recall)（MIT）を参考にしました。
 

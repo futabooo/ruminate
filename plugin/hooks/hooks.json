@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ruminate hook --delay 3",
+            "command": "if command -v ruminate >/dev/null 2>&1; then exec ruminate hook --delay 3; else cat >/dev/null; fi",
             "async": true,
             "timeout": 30
           }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "ruminate hook --delay 0",
+            "command": "if command -v ruminate >/dev/null 2>&1; then exec ruminate hook --delay 0; else cat >/dev/null; fi",
             "async": true,
             "timeout": 30
           }

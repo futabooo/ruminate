@@ -37,6 +37,8 @@ claude plugin validate plugin
 
 ## まだ作っていないもの
 
+- 最初のリリース。cargo-dist は 2026-10-31 に入れた（`dist-workspace.toml`、`.github/workflows/release.yml`、手元で `dist build` 済み）が、タグはまだ push していない。`v0.1.0` を push すると Release ができ、README のインストーラの URL が通るようになる
+
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）
 - 出題タスクの 2 晩目を確かめる: Issue #1 に答えを文章でコメントしたあと、翌晩の実行で採点と講評が付いて Issue が閉じ、`review/history.jsonl` に 3 行入り、`items.jsonl` の `stage` と `next_due` が進むか

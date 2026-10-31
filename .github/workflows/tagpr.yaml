@@ -1,0 +1,41 @@
+# tagpr keeps a release PR open on main. Each merge to main updates it
+# (version in Cargo.toml / Cargo.lock, CHANGELOG.md); merging the release PR
+# makes the tag. A tag pushed with GITHUB_TOKEN does not trigger other
+# workflows, so this workflow starts the Release workflow itself.
+name: tagpr
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tagpr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+    outputs:
+      tag: ${{ steps.tagpr.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: Songmu/tagpr@e1250d6c84e4425db82b5e90549d62dfe23e9ebe # v1.21.4
+        id: tagpr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    needs: [tagpr]
+    if: needs.tagpr.outputs.tag != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref main -f tag="$TAG"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.tagpr.outputs.tag }}

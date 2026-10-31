@@ -34,6 +34,8 @@ jobs:
       github.event.comment.user.type != 'Bot' &&
       !startsWith(github.event.comment.body, '採点:')
     runs-on: ubuntu-latest
+    # 採点は普通 1〜2 分で終わる。API が応答しないまま 6 時間（既定）走り続けないように。
+    timeout-minutes: 15
     # One grading at a time across all Issues: each run rewrites the same
     # review/ files, and two at once would make the second rebase conflict.
     concurrency:

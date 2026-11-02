@@ -187,7 +187,7 @@ claude --plugin-dir plugin    # プラグインを手元のファイルから読
 claude plugin validate plugin
 ```
 
-リリースは [tagpr](https://github.com/Songmu/tagpr) と [cargo-dist](https://axodotdev.github.io/cargo-dist) です。main に merge するたびに tagpr がリリース PR（`Cargo.toml` / `Cargo.lock` の version と `CHANGELOG.md` の更新）を作り直し、そのリリース PR を merge すると `0.2.0` のようなタグが打たれます。続けて `.github/workflows/release.yml` が macOS（arm64 / x86_64）と Linux（x86_64 / arm64）のバイナリとインストーラを GitHub Releases に置きます。minor を上げたいときはリリース PR に `tagpr:minor` ラベルを付けます。cargo-dist の設定は `dist-workspace.toml` にあり、`release.yml` は `dist generate` で作り直すので手で編集しません。
+リリースは [tagpr](https://github.com/Songmu/tagpr) と [cargo-dist](https://axodotdev.github.io/cargo-dist) です。main に merge するたびに tagpr がリリース PR（`Cargo.toml` / `Cargo.lock` の version と `CHANGELOG.md` の更新）を作り直し、そのリリース PR を merge すると `0.2.0` のようなタグが打たれます。続けて `.github/workflows/release.yml` が macOS（arm64 / x86_64）と Linux（x86_64 / arm64）のバイナリとインストーラを GitHub Releases に置きます。minor を上げたいときはリリース PR に `tagpr:minor` ラベルを付けます。cargo-dist の設定は `dist-workspace.toml` にあり、`release.yml` は `dist generate` で作り直すので手で編集しません。 Renovate は `release.yml` を触らず、`dist-workspace.toml` の action の版と cargo-dist の版を 1 つの PR（`cargo-dist` グループ）で上げます。その PR は `dist generate --check` で落ちるので、merge する前に Renovate のブランチで `dist generate` を実行して push します。
 
 Claude Code の会話ファイルの形式は内部仕様で、バージョンによって変わります。読み込みは `src/source/claude_code.rs` にまとまっていて、知らない行は飛ばします。会話ファイルの読み方は [claude-recall](https://github.com/babarot/claude-recall)（MIT）を参考にしました。
 

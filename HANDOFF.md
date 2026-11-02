@@ -37,7 +37,7 @@ claude plugin validate plugin
 
 ## まだ作っていないもの
 
-- 最初のリリース。cargo-dist と tagpr は 2026-10-31 に入れた（`dist-workspace.toml`、`.tagpr`、`.github/workflows/`）。tagpr の PR が main に入ると、次の main への push で tagpr がリリース PR を立てる。それを merge するとタグ `0.1.1`（または `tagpr:minor` で `0.2.0`）が打たれ、Release ワークフローが `gh workflow run` で起動して Release ができ、README のインストーラの URL が通る。初回は tagpr の挙動（Cargo.lock の version 書き換え、CHANGELOG.md の形式を dist が読めるか）を見ておく
+- （済）最初のリリース 0.1.0 は 2026-11-02 に tagpr → Release ワークフローの流れで出た。README のインストーラの URL も通っている。Cargo.lock の version 書き換えはまだ試されていない（0.1.0 のまま）ので、次のリリース PR で見る
 
 - `ruminate import` の DeepSeek 対応（claude.ai と ChatGPT は 2026-10-28 に実装。`src/source/` の `Export` トレイト）
 - claude.ai 用のセットアップスキル（`ruminate-setup`）

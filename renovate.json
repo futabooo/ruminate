@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "timezone": "Asia/Tokyo",
+  "labels": ["dependencies"],
+  "schedule": ["before 9am on friday"],
+  "minimumReleaseAge": "7 days",
+  "packageRules": [
+    {
+      "description": "CI 系の更新はアプリやライブラリの利用者に関係ないので ci ラベルを付ける。リリースノートを生成するリポジトリは .github/release.yml で除外する",
+      "matchManagers": ["github-actions", "dockerfile", "devcontainer"],
+      "addLabels": ["ci"]
+    },
+    {
+      "description": "1.0.0 以上の minor / patch は CI 通過後に automerge する。0.x は breaking change を含み得るので対象外",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "minimumReleaseAge": "0 days",
+    "schedule": ["at any time"]
+  }
+}
